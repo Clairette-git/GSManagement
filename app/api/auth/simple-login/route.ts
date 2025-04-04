@@ -6,20 +6,20 @@ import { sign } from "jsonwebtoken"
 export async function POST(request: Request) {
   try {
     const { email, password } = await request.json()
-    console.log("Login attempt for:", email)
+    console.log("Simple login attempt for:", email)
 
     // Find user by email or username
-    const [users] = await db.query(
-      "SELECT id, username, email, password, role FROM users WHERE username = ? OR email = ?",
-      [email, email],
-    )
+    const [users] = await db.query("SELECT id, username, password, role FROM users WHERE username = ? OR email = ?", [
+      email,
+      email,
+    ])
 
-    if (!users || (users as any[]).length === 0) {
+    if (!users || users.length === 0) {
       console.log("User not found")
       return NextResponse.json({ success: false, message: "Invalid email or password" }, { status: 401 })
     }
 
-    const user = (users as any[])[0]
+    const user = users[0]
     console.log("User found:", user.username)
 
     // Compare passwords
@@ -37,7 +37,6 @@ export async function POST(request: Request) {
       {
         id: user.id,
         username: user.username,
-        email: user.email,
         role: user.role,
       },
       jwtSecret,
@@ -54,7 +53,6 @@ export async function POST(request: Request) {
       user: {
         id: user.id,
         username: user.username,
-        email: user.email,
         role: user.role,
       },
     })

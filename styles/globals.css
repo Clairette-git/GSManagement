@@ -12,10 +12,6 @@ body {
   }
 }
 
-* {
-  user-select: none;        
-  -webkit-user-select: none;
-}
 @layer base {
   :root {
     --background: 0 0% 100%;

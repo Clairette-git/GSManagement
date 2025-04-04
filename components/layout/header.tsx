@@ -12,23 +12,44 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useRouter } from "next/navigation"
 
 export default function Header() {
   const [user, setUser] = useState<{ username: string; role: string } | null>(null)
-  const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
+        // Try to get user from API
         const response = await fetch("/api/auth/me")
         if (response.ok) {
           const data = await response.json()
           setUser(data.user)
+        } else {
+          // Fallback to localStorage
+          const userStr = localStorage.getItem("user")
+          if (userStr) {
+            try {
+              const userData = JSON.parse(userStr)
+              setUser(userData)
+            } catch (error) {
+              console.error("Error parsing user data:", error)
+            }
+          }
         }
       } catch (error) {
         console.error("Error fetching user:", error)
+
+        // Fallback to localStorage
+        const userStr = localStorage.getItem("user")
+        if (userStr) {
+          try {
+            const userData = JSON.parse(userStr)
+            setUser(userData)
+          } catch (error) {
+            console.error("Error parsing user data:", error)
+          }
+        }
       }
     }
 
@@ -37,15 +58,21 @@ export default function Header() {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("/api/auth/logout", {
+      // Clear localStorage
+      localStorage.removeItem("auth_token")
+      localStorage.removeItem("user")
+
+      // Call logout API
+      await fetch("/api/auth/logout", {
         method: "POST",
       })
 
-      if (response.ok) {
-        router.push("/login")
-      }
+      // Redirect to login
+      window.location.href = "/login"
     } catch (error) {
       console.error("Logout error:", error)
+      // Force redirect even if API fails
+      window.location.href = "/login"
     }
   }
 
