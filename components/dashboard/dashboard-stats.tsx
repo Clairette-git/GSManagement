@@ -1,9 +1,11 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import type React from "react"
+
+import { Card, CardContent } from "@/components/ui/card"
 import type { Supply } from "@/types"
 import { useEffect, useState } from "react"
-import { Loader2 } from "lucide-react"
+import { Cylinder, Droplet, TruckIcon, DollarSign } from "lucide-react"
 
 export default function DashboardStats() {
   const [stats, setStats] = useState<{
@@ -57,15 +59,10 @@ export default function DashboardStats() {
     return (
       <>
         {[1, 2, 3, 4].map((i) => (
-          <Card key={i} className="animate-pulse">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <CardTitle className="text-sm font-medium">Loading...</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                <Loader2 className="h-4 w-4 animate-spin" />
-              </div>
-              <p className="text-xs text-muted-foreground">Loading data...</p>
+          <Card key={i} className="bg-gray-800 border-gray-700 animate-pulse">
+            <CardContent className="p-6">
+              <div className="h-10 bg-gray-700 rounded-md mb-2"></div>
+              <div className="h-6 bg-gray-700 rounded-md w-1/2"></div>
             </CardContent>
           </Card>
         ))}
@@ -75,43 +72,64 @@ export default function DashboardStats() {
 
   return (
     <>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-          <CardTitle className="text-sm font-medium">Total Cylinders</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{stats.totalCylinders}</div>
-          <p className="text-xs text-muted-foreground">Cylinders in the system</p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-          <CardTitle className="text-sm font-medium">Gas Types</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{stats.totalGasTypes}</div>
-          <p className="text-xs text-muted-foreground">Different gas types available</p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-          <CardTitle className="text-sm font-medium">Total Supplies</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{stats.totalSupplies}</div>
-          <p className="text-xs text-muted-foreground">Completed gas deliveries</p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-          <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">${stats.totalRevenue.toFixed(2)}</div>
-          <p className="text-xs text-muted-foreground">Revenue from all supplies</p>
-        </CardContent>
-      </Card>
+      <StatCard
+        title="Total Cylinders"
+        value={stats.totalCylinders}
+        description="Cylinders in the system"
+        icon={<Cylinder className="h-5 w-5" />}
+        color="blue"
+      />
+      <StatCard
+        title="Gas Types"
+        value={stats.totalGasTypes}
+        description="Different gas types available"
+        icon={<Droplet className="h-5 w-5" />}
+        color="green"
+      />
+      <StatCard
+        title="Total Supplies"
+        value={stats.totalSupplies}
+        description="Completed gas deliveries"
+        icon={<TruckIcon className="h-5 w-5" />}
+        color="purple"
+      />
+      <StatCard
+        title="Total Revenue"
+        value={`$${stats.totalRevenue.toFixed(2)}`}
+        description="Revenue from all supplies"
+        icon={<DollarSign className="h-5 w-5" />}
+        color="amber"
+      />
     </>
   )
 }
 
+interface StatCardProps {
+  title: string
+  value: number | string
+  description: string
+  icon: React.ReactNode
+  color: "blue" | "green" | "purple" | "amber"
+}
+
+function StatCard({ title, value, description, icon, color }: StatCardProps) {
+  const colorClasses = {
+    blue: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+    green: "bg-green-500/10 text-green-500 border-green-500/20",
+    purple: "bg-purple-500/10 text-purple-500 border-purple-500/20",
+    amber: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  }
+
+  return (
+    <Card className="bg-gray-800 border-gray-700">
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-medium text-gray-400">{title}</h3>
+          <div className={`p-2 rounded-md ${colorClasses[color]}`}>{icon}</div>
+        </div>
+        <div className="text-2xl font-bold">{value}</div>
+        <p className="text-xs text-gray-500 mt-1">{description}</p>
+      </CardContent>
+    </Card>
+  )
+}

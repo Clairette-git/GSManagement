@@ -5,7 +5,7 @@ import { verify } from "jsonwebtoken"
 export async function GET(request: Request) {
   try {
     // Try to get token from cookies first
-    const token = cookies().get("auth_token")?.value
+    const token = (await cookies()).get("auth_token")?.value
 
     // If no cookie, try to get from Authorization header
     const authHeader = request.headers.get("Authorization")

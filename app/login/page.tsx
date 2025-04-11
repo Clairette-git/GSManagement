@@ -1,15 +1,17 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import Image from "next/image"
-import { CheckCircle } from "lucide-react"
+import { CheckCircle, Eye, EyeOff, ArrowRight } from "lucide-react"
 
 export default function LoginPage() {
   const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [firstName, setFirstName] = useState("")
+  const [lastName, setLastName] = useState("")
   const [isEmailValid, setIsEmailValid] = useState(false)
   const [isPasswordValid, setIsPasswordValid] = useState(false)
   const [loginError, setLoginError] = useState<string | null>(null)
@@ -89,79 +91,116 @@ export default function LoginPage() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (
-      !validateUsername(username) ||
-      !validateEmail(email) ||
-      !validatePassword(password) ||
-      !validateConfirmPassword(confirmPassword)
-    ) {
+    if (!firstName || !lastName || !validateEmail(email) || !validatePassword(password)) {
+      setLoginError("Please fill in all required fields correctly")
       return
     }
 
     try {
+      setIsLoading(true)
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, email, password, role }),
+        body: JSON.stringify({
+          username: `${firstName.toLowerCase()}_${lastName.toLowerCase()}`,
+          email,
+          password,
+          role,
+        }),
       })
 
+      const data = await response.json()
+
       if (response.ok) {
-        alert("Account created successfully! Please sign in.")
+        setLoginError(null)
         setActiveTab("signin")
+        alert("Account created successfully! Please sign in.")
       } else {
-        const data = await response.json()
-        alert(data.message || "Registration failed")
+        setLoginError(data.message || "Registration failed")
       }
     } catch (error) {
       console.error("Signup error:", error)
-      alert("An error occurred during registration")
+      setLoginError("An error occurred during registration")
+    } finally {
+      setIsLoading(false)
     }
   }
 
   return (
-    <div className="flex min-h-screen bg-[#dee1e7]">
-      <div className="flex flex-col md:flex-row w-full max-w-6xl mx-auto bg-white rounded-lg overflow-hidden shadow-lg">
-        {/* Left side - Form */}
-        <div className="w-full md:w-1/2 p-8 md:p-12">
-          <div className="mb-8">
-            <Image src="/DPMMK.png" alt="Kalisimbi Ltd Logo" width={240} height={60} className="mb-8" />
+    <div className="flex min-h-screen">
+      {/* Left side - Dark background with gas cylinders */}
+      <div className="hidden md:flex md:w-1/2 bg-gray-900 text-white p-12 flex-col justify-between relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-gray-800 opacity-90 z-0"></div>
 
-            <h1 className="text-2xl font-bold text-[#000000]">Welcome Back</h1>
-            <p className="text-[#adadad]">Please enter Your details</p>
+        {/* Gas cylinder images with overlay */}
+        <div className="absolute inset-0 opacity-20 z-0">
+          <div className="relative w-full h-full">
+            <Image
+              src="/Cylinders.jpg"
+              alt="Gas Cylinders"
+              fill
+              style={{ objectFit: "cover" }}
+              className="mix-blend-overlay"
+            />
+          </div>
+        </div>
+
+        <div className="relative z-10">
+          <Image src="/DPMMK.png" alt="Kalisimbi Ltd Logo" width={180} height={45} className="mb-8" />
+        </div>
+
+        <div className="relative z-10 space-y-6">
+        
+          <h2 className="text-4xl font-bold leading-tight">
+            Manage Gas <br />
+            <span className="relative">
+              Supply
+            </span>
+          </h2>
+          <p className="text-gray-300 max-w-md">
+            Track inventory, manage deliveries, and optimize your medical gas supply chain with our comprehensive
+            management system.
+          </p>
+        </div>
+
+        <div className="relative z-10 text-sm text-gray-400">© 2025 Kalisimbi Gas. All rights reserved.</div>
+      </div>
+
+      {/* Right side - Login form */}
+      <div className="w-full md:w-1/2 bg-white p-6 md:p-12 flex flex-col justify-center">
+        <div className="max-w-md w-full mx-auto">
+          <div className="text-center md:text-left mb-8">
+            <div className="md:hidden mb-6">
+              <Image src="/DPMMK.png" alt="Kalisimbi Ltd Logo" width={160} height={40} />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              {activeTab === "signin" ? "Welcome back!" : "Create your account"}
+            </h1>
+            <p className="text-gray-500 mt-2">
+              {activeTab === "signin"
+                ? "Sign in to access your gas management dashboard"
+                : "Join us to manage your gas supply efficiently"}
+            </p>
           </div>
 
-          {/* Tabs */}
-          <div className="flex mb-6 bg-[#f0f0f0] rounded-md p-1">
-            <button
-              className={`w-1/2 py-2 text-center rounded-md ${activeTab === "signin" ? "bg-white shadow-sm" : ""}`}
-              onClick={() => setActiveTab("signin")}
-            >
-              Sign In
-            </button>
-            <button
-              className={`w-1/2 py-2 text-center rounded-md ${activeTab === "signup" ? "bg-white shadow-sm" : ""}`}
-              onClick={() => setActiveTab("signup")}
-            >
-              Signup
-            </button>
-          </div>
-
-          {loginError && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">{loginError}</div>}
+          {loginError && (
+            <div className="mb-6 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg">{loginError}</div>
+          )}
 
           {activeTab === "signin" ? (
-            <form onSubmit={handleLogin}>
-              <div className="mb-4 relative">
-                <label htmlFor="email" className="block text-sm mb-1">
-                  Email Address
+            <form onSubmit={handleLogin} className="space-y-5">
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
                 </label>
                 <div className="relative">
                   <input
                     type="email"
                     id="email"
-                    className="w-full p-2 border rounded-md"
-                    placeholder="username@kalisimbi.org"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    placeholder="you@example.com"
                     value={email}
                     onChange={(e) => {
                       setEmail(e.target.value)
@@ -174,75 +213,137 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <div className="mb-6 relative">
-                <label htmlFor="password" className="block text-sm mb-1">
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                   Password
                 </label>
                 <div className="relative">
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     id="password"
-                    className="w-full p-2 border rounded-md"
-                    placeholder="••••••••••"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    placeholder="••••••••"
                     value={password}
                     onChange={(e) => {
                       setPassword(e.target.value)
                       validatePassword(e.target.value)
                     }}
                   />
-                  {isPasswordValid && (
-                    <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-500 w-5 h-5" />
-                  )}
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <input
+                    id="remember-me"
+                    name="remember-me"
+                    type="checkbox"
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                    Remember me
+                  </label>
+                </div>
+                <div className="text-sm">
+                  <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+                    Forgot password?
+                  </a>
                 </div>
               </div>
 
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-[#0365ff] text-white py-3 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+                className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50"
               >
-                {isLoading ? "Logging in..." : "Login"}
+                {isLoading ? (
+                  "Signing in..."
+                ) : (
+                  <>
+                    Sign in
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </>
+                )}
               </button>
-            </form>
-          ) : (
-            <form onSubmit={handleSignup}>
-              <div className="mb-4 relative">
-                <label htmlFor="username" className="block text-sm mb-1">
-                  Username
-                </label>
+
+              <div className="mt-6">
                 <div className="relative">
-                  <input
-                    type="text"
-                    id="username"
-                    className="w-full p-2 border rounded-md"
-                    placeholder="johndoe"
-                    value={username}
-                    onChange={(e) => {
-                      setUsername(e.target.value)
-                      validateUsername(e.target.value)
-                    }}
-                  />
-                  {isUsernameValid && (
-                    <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-500 w-5 h-5" />
-                  )}
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-300"></div>
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="mb-4 relative">
-                <label htmlFor="signup-email" className="block text-sm mb-1">
-                  Email Address
+              <p className="mt-6 text-center text-sm text-gray-600">
+                Don't have an account?{" "}
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("signup")}
+                  className="font-medium text-blue-600 hover:text-blue-500"
+                >
+                  Sign up
+                </button>
+              </p>
+            </form>
+          ) : (
+            <form onSubmit={handleSignup} className="space-y-5">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="first-name" className="block text-sm font-medium text-gray-700 mb-1">
+                    First Name
+                  </label>
+                  <input
+                    type="text"
+                    id="first-name"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    placeholder="John"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="last-name" className="block text-sm font-medium text-gray-700 mb-1">
+                    Last Name
+                  </label>
+                  <input
+                    type="text"
+                    id="last-name"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    placeholder="Doe"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="signup-email" className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
                 </label>
                 <div className="relative">
                   <input
                     type="email"
                     id="signup-email"
-                    className="w-full p-2 border rounded-md"
-                    placeholder="username@kalisimbi.org"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    placeholder="you@example.com"
                     value={email}
                     onChange={(e) => {
                       setEmail(e.target.value)
                       validateEmail(e.target.value)
                     }}
+                    required
                   />
                   {isEmailValid && (
                     <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-500 w-5 h-5" />
@@ -250,59 +351,44 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <div className="mb-4 relative">
-                <label htmlFor="signup-password" className="block text-sm mb-1">
+              <div>
+                <label htmlFor="signup-password" className="block text-sm font-medium text-gray-700 mb-1">
                   Password
                 </label>
                 <div className="relative">
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     id="signup-password"
-                    className="w-full p-2 border rounded-md"
-                    placeholder="••••••••••"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    placeholder="••••••••"
                     value={password}
                     onChange={(e) => {
                       setPassword(e.target.value)
                       validatePassword(e.target.value)
                     }}
+                    required
                   />
-                  {isPasswordValid && (
-                    <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-500 w-5 h-5" />
-                  )}
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
                 </div>
+                <p className="mt-1 text-sm text-gray-500">Password must be at least 8 characters</p>
               </div>
 
-              <div className="mb-4 relative">
-                <label htmlFor="confirm-password" className="block text-sm mb-1">
-                  Confirm Password
-                </label>
-                <div className="relative">
-                  <input
-                    type="password"
-                    id="confirm-password"
-                    className="w-full p-2 border rounded-md"
-                    placeholder="••••••••••"
-                    value={confirmPassword}
-                    onChange={(e) => {
-                      setConfirmPassword(e.target.value)
-                      validateConfirmPassword(e.target.value)
-                    }}
-                  />
-                  {isConfirmPasswordValid && (
-                    <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-500 w-5 h-5" />
-                  )}
-                </div>
-              </div>
-
-              <div className="mb-6">
-                <label htmlFor="role" className="block text-sm mb-1">
+              <div>
+                <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
                   Role
                 </label>
                 <select
                   id="role"
-                  className="w-full p-2 border rounded-md"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   value={role}
                   onChange={(e) => setRole(e.target.value as "admin" | "storekeeper" | "technician")}
+                  required
                 >
                   <option value="storekeeper">Storekeeper</option>
                   <option value="technician">Technician</option>
@@ -312,45 +398,61 @@ export default function LoginPage() {
 
               <button
                 type="submit"
-                className="w-full bg-[#0365ff] text-white py-3 rounded-md hover:bg-blue-700 transition-colors"
+                disabled={isLoading}
+                className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50"
               >
-                Create Account
+                {isLoading ? (
+                  "Creating account..."
+                ) : (
+                  <>
+                    Create account
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </>
+                )}
               </button>
+
+              <div className="mt-6">
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-300"></div>
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                  </div>
+                </div>
+
+                <div className="mt-6 grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                  >
+                    <Image src="/google-icon.png" alt="Google" width={20} height={20} />
+                    <span className="ml-2">Google</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                  >
+                    <Image src="/facebook-icon.png" alt="Facebook" width={20} height={20} />
+                    <span className="ml-2">Facebook</span>
+                  </button>
+                </div>
+              </div>
+
+              <p className="mt-6 text-center text-sm text-gray-600">
+                Already have an account?{" "}
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("signin")}
+                  className="font-medium text-blue-600 hover:text-blue-500"
+                >
+                  Sign in
+                </button>
+              </p>
             </form>
           )}
-
-          <div className="mt-6 text-center">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <div className="h-px bg-gray-300 flex-1"></div>
-              <span className="text-[#adadad] text-sm">Or Continue With</span>
-              <div className="h-px bg-gray-300 flex-1"></div>
-            </div>
-
-            <div className="flex justify-center gap-4">
-              <button className="p-2 border rounded-full">
-                <Image src="/google-icon.png" alt="Google" width={24} height={24} />
-              </button>
-              <button className="p-2 border rounded-full">
-                <Image src="/facebook-icon.png" alt="Facebook" width={24} height={24} />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Right side - Image */}
-        <div className="hidden md:block md:w-1/2 bg-white p-6">
-          <div className="h-full flex items-center justify-center">
-            <Image
-              src="/gas-cylinders.png"
-              alt="Medical Gas Cylinders"
-              width={500}
-              height={600}
-              className="object-contain"
-            />
-          </div>
         </div>
       </div>
     </div>
   )
 }
-

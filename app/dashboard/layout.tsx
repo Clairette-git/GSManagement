@@ -1,11 +1,10 @@
 "use client"
 
 import type React from "react"
-
 import { useEffect, useState } from "react"
-import Sidebar from "@/components/layout/sidebar"
-import Header from "@/components/layout/header"
 import { useRouter } from "next/navigation"
+import Sidebar from "@/components/layout/sidebar"
+import DashboardHeader from "@/components/layout/dashboard-header"
 
 export default function DashboardLayout({
   children,
@@ -56,8 +55,12 @@ export default function DashboardLayout({
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-lg">Loading...</p>
+      <div className="min-h-screen flex items-center justify-center bg-gray-900">
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="h-12 w-12 bg-blue-500 rounded-full mb-4"></div>
+          <div className="h-4 w-32 bg-gray-700 rounded mb-2"></div>
+          <div className="h-3 w-24 bg-gray-700 rounded"></div>
+        </div>
       </div>
     )
   }
@@ -67,13 +70,12 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <Sidebar />
+    <div className="flex min-h-screen bg-gray-900 text-white">
+      <Sidebar className="border-r border-gray-800" />
       <div className="flex flex-col flex-1">
-        <Header />
-        <main className="flex-1">{children}</main>
+        <DashboardHeader />
+        <main className="flex-1 p-4 md:p-6 overflow-auto">{children}</main>
       </div>
     </div>
   )
 }
-

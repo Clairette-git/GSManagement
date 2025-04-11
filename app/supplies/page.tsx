@@ -11,11 +11,14 @@ export const metadata: Metadata = {
 
 export default function SuppliesPage() {
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Supplies</h2>
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Supplies</h2>
+          <p className="text-gray-400 mt-1">Manage gas deliveries to hospitals</p>
+        </div>
         <Link href="/supplies/add">
-          <Button>
+          <Button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 border-0">
             <PlusCircle className="mr-2 h-4 w-4" />
             New Supply
           </Button>
@@ -25,4 +28,3 @@ export default function SuppliesPage() {
     </div>
   )
 }
-

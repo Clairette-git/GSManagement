@@ -28,36 +28,36 @@ export default function InventorySummary({ className }: InventorySummaryProps) {
   }, [])
 
   return (
-    <Card className={className}>
+    <Card className={`bg-gray-800 border-gray-700 ${className}`}>
       <CardHeader>
-        <CardTitle>Inventory Summary</CardTitle>
-        <CardDescription>Current gas inventory levels</CardDescription>
+        <CardTitle className="text-lg font-medium">Inventory Summary</CardTitle>
+        <CardDescription className="text-gray-400">Current gas inventory levels</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="space-y-2">
+          <div className="space-y-4">
             {[1, 2, 3].map((i) => (
               <div key={i} className="flex items-center">
-                <div className="w-full h-9 bg-muted animate-pulse rounded" />
+                <div className="w-full h-12 bg-gray-700 animate-pulse rounded-md" />
               </div>
             ))}
           </div>
         ) : inventory.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No inventory data available</p>
+          <p className="text-sm text-gray-400">No inventory data available</p>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {inventory.map((item) => (
               <div key={item.gas_type_id} className="flex items-center">
                 <div className="w-full">
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">{item.gas_name}</span>
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-sm text-gray-400">
                       {item.total_liters} liters ({item.total_cylinders} cylinders)
                     </span>
                   </div>
-                  <div className="w-full bg-muted h-2 rounded-full overflow-hidden">
+                  <div className="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
                     <div
-                      className="bg-primary h-full"
+                      className="bg-blue-500 h-full"
                       style={{ width: `${Math.min(100, (item.total_liters / 1000) * 100)}%` }}
                     />
                   </div>
@@ -70,4 +70,3 @@ export default function InventorySummary({ className }: InventorySummaryProps) {
     </Card>
   )
 }
-

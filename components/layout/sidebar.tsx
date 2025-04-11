@@ -1,11 +1,22 @@
 "use client"
 
 import type React from "react"
-
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { BarChart3, Cylinder, FileText, Home, Package, Settings, Truck, Users } from "lucide-react"
+import {
+  BarChart3,
+  Cylinder,
+  FileText,
+  Home,
+  Package,
+  Settings,
+  Truck,
+  Users,
+  PlusCircle,
+  Calendar,
+  Clock,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
 
@@ -32,99 +43,55 @@ export default function Sidebar({ className }: SidebarProps) {
   }, [])
 
   return (
-    <div className={cn("pb-12 hidden md:block", className)}>
-      <div className="space-y-4 py-4">
-        <div className="px-4 py-2">
-          <Link href="/dashboard">
-            <h2 className="mb-2 px-2 text-xl font-semibold tracking-tight">Kalisimbi Gas</h2>
-          </Link>
-          <div className="space-y-1">
-            <Link href="/dashboard">
-              <Button
-                variant={pathname === "/dashboard" ? "default" : "ghost"}
-                size="sm"
-                className="w-full justify-start"
-              >
-                <Home className="mr-2 h-4 w-4" />
-                Dashboard
-              </Button>
-            </Link>
-            <Link href="/inventory">
-              <Button
-                variant={pathname.startsWith("/inventory") ? "default" : "ghost"}
-                size="sm"
-                className="w-full justify-start"
-              >
-                <Package className="mr-2 h-4 w-4" />
-                Inventory
-              </Button>
-            </Link>
-            <Link href="/cylinders">
-              <Button
-                variant={pathname.startsWith("/cylinders") ? "default" : "ghost"}
-                size="sm"
-                className="w-full justify-start"
-              >
-                <Cylinder className="mr-2 h-4 w-4" />
-                Cylinders
-              </Button>
-            </Link>
-            <Link href="/supplies">
-              <Button
-                variant={pathname.startsWith("/supplies") ? "default" : "ghost"}
-                size="sm"
-                className="w-full justify-start"
-              >
-                <Truck className="mr-2 h-4 w-4" />
-                Supplies
-              </Button>
-            </Link>
-            <Link href="/invoices">
-              <Button
-                variant={pathname.startsWith("/invoices") ? "default" : "ghost"}
-                size="sm"
-                className="w-full justify-start"
-              >
-                <FileText className="mr-2 h-4 w-4" />
-                Invoices
-              </Button>
-            </Link>
-            <Link href="/reports">
-              <Button
-                variant={pathname.startsWith("/reports") ? "default" : "ghost"}
-                size="sm"
-                className="w-full justify-start"
-              >
-                <BarChart3 className="mr-2 h-4 w-4" />
-                Reports
-              </Button>
-            </Link>
-            {user?.role === "admin" && (
-              <Link href="/users">
-                <Button
-                  variant={pathname.startsWith("/users") ? "default" : "ghost"}
-                  size="sm"
-                  className="w-full justify-start"
-                >
-                  <Users className="mr-2 h-4 w-4" />
-                  Users
-                </Button>
-              </Link>
-            )}
-            <Link href="/settings">
-              <Button
-                variant={pathname.startsWith("/settings") ? "default" : "ghost"}
-                size="sm"
-                className="w-full justify-start"
-              >
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
-              </Button>
-            </Link>
-          </div>
+    <div className={cn("w-16 md:w-64 flex flex-col bg-gray-900", className)}>
+      <div className="p-4 flex justify-center md:justify-start">
+        <Button variant="outline" size="icon" className="rounded-full bg-blue-600 border-0 hover:bg-blue-700">
+          <PlusCircle className="h-5 w-5" />
+        </Button>
+      </div>
+
+      <div className="flex-1 py-8 flex flex-col gap-1">
+        <NavItem href="/dashboard" icon={Home} label="Dashboard" isActive={pathname === "/dashboard"} />
+        <NavItem href="/inventory" icon={Package} label="Inventory" isActive={pathname.startsWith("/inventory")} />
+        <NavItem href="/cylinders" icon={Cylinder} label="Cylinders" isActive={pathname.startsWith("/cylinders")} />
+        <NavItem href="/supplies" icon={Truck} label="Supplies" isActive={pathname.startsWith("/supplies")} />
+        <NavItem href="/invoices" icon={FileText} label="Invoices" isActive={pathname.startsWith("/invoices")} />
+        <NavItem href="/reports" icon={BarChart3} label="Reports" isActive={pathname.startsWith("/reports")} />
+        <NavItem href="/calendar" icon={Calendar} label="Calendar" isActive={pathname.startsWith("/calendar")} />
+        <NavItem href="/activity" icon={Clock} label="Activity" isActive={pathname.startsWith("/activity")} />
+
+        {user?.role === "admin" && (
+          <NavItem href="/users" icon={Users} label="Users" isActive={pathname.startsWith("/users")} />
+        )}
+
+        <div className="mt-auto">
+          <NavItem href="/settings" icon={Settings} label="Settings" isActive={pathname.startsWith("/settings")} />
         </div>
       </div>
     </div>
   )
 }
 
+interface NavItemProps {
+  href: string
+  icon: React.ElementType
+  label: string
+  isActive: boolean
+}
+
+function NavItem({ href, icon: Icon, label, isActive }: NavItemProps) {
+  return (
+    <Link href={href} className="block">
+      <div
+        className={cn(
+          "flex items-center h-10 px-3 mx-2 rounded-md transition-colors",
+          isActive ? "bg-gray-800 text-white" : "text-gray-400 hover:text-white hover:bg-gray-800",
+        )}
+      >
+        <Icon className="h-5 w-5 min-w-5" />
+        <span className="ml-3 text-sm font-medium hidden md:block">{label}</span>
+        {isActive && <div className="w-1 h-5 bg-blue-500 rounded-full ml-auto hidden md:block" />}
+      </div>
+    </Link>
+  )
+}

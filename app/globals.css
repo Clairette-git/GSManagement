@@ -12,6 +12,43 @@
   --background-light: #f0f0f0;
   --background-white: #ffffff;
   --border-color: #d9d9d9;
+
+  /* Dark theme variables */
+  --card: 215 28% 17%;
+  --card-foreground: 0 0% 100%;
+  --popover: 215 28% 17%;
+  --popover-foreground: 0 0% 100%;
+  --primary: 221 83% 53%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 215 25% 27%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 215 25% 27%;
+  --muted-foreground: 217 10% 64%;
+  --accent: 215 25% 27%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 215 28% 17%;
+  --input: 215 28% 17%;
+  --ring: 221 83% 53%;
+  --radius: 0.5rem;
+
+  /* Chart colors */
+  --chart-1: 221 83% 53%;
+  --chart-2: 262 83% 58%;
+  --chart-3: 142 71% 45%;
+  --chart-4: 31 95% 44%;
+  --chart-5: 0 84% 60%;
+
+  /* Sidebar colors */
+  --sidebar-background: 215 28% 17%;
+  --sidebar-foreground: 0 0% 100%;
+  --sidebar-primary: 221 83% 53%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 215 25% 27%;
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-border: 215 28% 17%;
+  --sidebar-ring: 221 83% 53%;
 }
 
 body {
@@ -25,3 +62,50 @@ body {
   }
 }
 
+/* Custom scrollbar */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: rgba(31, 41, 55, 0.5);
+  border-radius: 10px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(75, 85, 99, 0.5);
+  border-radius: 10px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgba(107, 114, 128, 0.7);
+}
+
+/* Dark theme specific styles */
+.dark-theme-card {
+  @apply bg-gray-800 border-gray-700;
+}
+
+.dark-theme-input {
+  @apply bg-gray-900 border-gray-700 focus:border-blue-500 text-white;
+}
+
+.dark-theme-button {
+  @apply bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0;
+}
+
+.dark-theme-button-outline {
+  @apply border-gray-700 bg-gray-800 hover:bg-gray-700 text-gray-300;
+}
+
+.dark-theme-table-header {
+  @apply bg-gray-900 text-gray-400 font-medium;
+}
+
+.dark-theme-table-row {
+  @apply hover:bg-gray-800/50 border-gray-800;
+}
+
+.dark-theme-badge {
+  @apply bg-gray-700/50 text-gray-300 border-gray-600;
+}

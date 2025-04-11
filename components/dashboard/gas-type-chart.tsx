@@ -35,43 +35,45 @@ export function GasTypeChart({ className }: GasTypeChartProps) {
   }))
 
   return (
-    <Card className={className}>
+    <Card className={`bg-gray-800 border-gray-700 ${className}`}>
       <CardHeader>
-        <CardTitle>Gas Types and Prices</CardTitle>
-        <CardDescription>Price per liter for each gas type</CardDescription>
+        <CardTitle className="text-lg font-medium">Gas Types and Prices</CardTitle>
+        <CardDescription className="text-gray-400">Price per liter for each gas type</CardDescription>
       </CardHeader>
       <CardContent className="pl-2">
         {isLoading ? (
-          <div className="flex items-center justify-center h-80">
-            <p>Loading chart data...</p>
+          <div className="flex items-center justify-center h-[250px]">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={350}>
-            <BarChart data={chartData}>
-              <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-              <YAxis
-                stroke="#888888"
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(value) => `$${value}`}
-              />
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-              <Tooltip
-                formatter={(value) => [`$${value}`, "Price per Liter"]}
-                contentStyle={{
-                  backgroundColor: "white",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  padding: "8px",
-                }}
-              />
-              <Bar dataKey="price" fill="#0365ff" radius={[4, 4, 0, 0]} className="fill-primary" />
-            </BarChart>
-          </ResponsiveContainer>
+          <div className="h-[250px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                <XAxis dataKey="name" stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis
+                  stroke="#6b7280"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(value) => `$${value}`}
+                />
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "#1f2937",
+                    border: "1px solid #374151",
+                    borderRadius: "0.375rem",
+                    color: "#f9fafb",
+                  }}
+                  formatter={(value) => [`$${value}`, "Price per Liter"]}
+                  labelStyle={{ color: "#d1d5db" }}
+                />
+                <Bar dataKey="price" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={40} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         )}
       </CardContent>
     </Card>
   )
 }
-
