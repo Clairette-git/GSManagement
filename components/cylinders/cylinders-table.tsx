@@ -1,10 +1,9 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import type { Cylinder, GasType } from "@/types"
-import { Edit, Trash2, Search } from "lucide-react"
+import { Edit, Trash2, Search, Filter, Plus, Download, Upload, ArrowLeft } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
@@ -21,6 +20,8 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import Link from "next/link"
+import { CylinderIcon } from "lucide-react"
 
 export default function CylindersTable() {
   const [cylinders, setCylinders] = useState<Cylinder[]>([])
@@ -80,179 +81,209 @@ export default function CylindersTable() {
     return matchesStatus && matchesSize && matchesSearch
   })
 
-  const getStatusColor = (status: string) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case "in stock":
-        return "bg-green-500/10 text-green-400 border-green-500/20"
+        return <Badge className="bg-green-100 text-green-800 border-green-200">Active</Badge>
       case "delivered":
-        return "bg-blue-500/10 text-blue-400 border-blue-500/20"
+        return <Badge className="bg-blue-100 text-blue-800 border-blue-200">Delivered</Badge>
       case "returned":
-        return "bg-amber-500/10 text-amber-400 border-amber-500/20"
+        return <Badge className="bg-amber-100 text-amber-800 border-amber-200">Returned</Badge>
       default:
-        return "bg-gray-500/10 text-gray-400 border-gray-500/20"
+        return <Badge className="bg-gray-100 text-gray-800 border-gray-200">{status}</Badge>
     }
   }
 
   return (
-    <Card className="bg-gray-800 border-gray-700">
-      <CardHeader className="pb-3">
+    <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+      <div className="p-6 border-b border-gray-200">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <CardTitle className="text-xl font-semibold">Gas Cylinders</CardTitle>
-            <CardDescription className="text-gray-400">Manage gas cylinders and their status</CardDescription>
+            <div className="flex items-center gap-2 mb-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-gray-500 hover:text-gray-700"
+                onClick={() => router.push("/dashboard")}
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <h2 className="text-xl font-semibold text-gray-900">Gas Cylinders</h2>
+            </div>
+            <p className="text-gray-500 mt-1">Manage gas cylinders and their status</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Link href="/cylinders/add">
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white h-10 px-4 rounded-lg flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                <span>Add Cylinder</span>
+              </Button>
+            </Link>
           </div>
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-col md:flex-row gap-4 mb-6 bg-gray-900/50 p-4 rounded-lg border border-gray-700">
+      </div>
+
+      <div className="p-4 border-b border-gray-200 bg-gray-50">
+        <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 placeholder="Search by cylinder code..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 bg-gray-900 border-gray-700 focus:border-blue-500 w-full"
+                className="pl-9 pr-4 py-2 h-10 w-full text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           </div>
           <div className="flex flex-col md:flex-row gap-4">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-[180px] bg-gray-900 border-gray-700">
+              <SelectTrigger className="w-full md:w-[180px] h-10 border-gray-300 text-gray-700">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-gray-700 text-white">
-                <SelectItem value="all" className="focus:bg-gray-700 focus:text-white">
-                  All Statuses
-                </SelectItem>
-                <SelectItem value="in stock" className="focus:bg-gray-700 focus:text-white">
-                  In Stock
-                </SelectItem>
-                <SelectItem value="delivered" className="focus:bg-gray-700 focus:text-white">
-                  Delivered
-                </SelectItem>
-                <SelectItem value="returned" className="focus:bg-gray-700 focus:text-white">
-                  Returned
-                </SelectItem>
+              <SelectContent className="bg-white border border-gray-200">
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="in stock">In Stock</SelectItem>
+                <SelectItem value="delivered">Delivered</SelectItem>
+                <SelectItem value="returned">Returned</SelectItem>
               </SelectContent>
             </Select>
             <Select value={sizeFilter} onValueChange={setSizeFilter}>
-              <SelectTrigger className="w-full md:w-[180px] bg-gray-900 border-gray-700">
+              <SelectTrigger className="w-full md:w-[180px] h-10 border-gray-300 text-gray-700">
                 <SelectValue placeholder="Filter by size" />
               </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-gray-700 text-white">
-                <SelectItem value="all" className="focus:bg-gray-700 focus:text-white">
-                  All Sizes
-                </SelectItem>
-                <SelectItem value="10L" className="focus:bg-gray-700 focus:text-white">
-                  10L
-                </SelectItem>
-                <SelectItem value="40L" className="focus:bg-gray-700 focus:text-white">
-                  40L
-                </SelectItem>
-                <SelectItem value="50L" className="focus:bg-gray-700 focus:text-white">
-                  50L
-                </SelectItem>
+              <SelectContent className="bg-white border border-gray-200">
+                <SelectItem value="all">All Sizes</SelectItem>
+                <SelectItem value="10L">10L</SelectItem>
+                <SelectItem value="40L">40L</SelectItem>
+                <SelectItem value="50L">50L</SelectItem>
               </SelectContent>
             </Select>
+            <Button variant="outline" size="icon" className="h-10 w-10 border-gray-300">
+              <Filter className="h-4 w-4 text-gray-500" />
+            </Button>
           </div>
         </div>
+      </div>
 
+      <div className="overflow-x-auto">
         {isLoading ? (
-          <div className="space-y-2">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="w-full h-10 bg-gray-700 animate-pulse rounded" />
-            ))}
+          <div className="p-8 flex justify-center">
+            <div className="animate-spin h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full"></div>
           </div>
         ) : filteredCylinders.length === 0 ? (
-          <div className="text-center py-10 bg-gray-900/50 rounded-lg border border-gray-800">
-            <p className="text-gray-400">No cylinders found</p>
-            <Button
-              variant="outline"
-              className="mt-4 border-gray-700 hover:bg-gray-800 hover:text-white"
-              onClick={() => router.push("/cylinders/add")}
-            >
-              Add your first cylinder
+          <div className="text-center py-12">
+            <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <CylinderIcon className="h-8 w-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-1">No cylinders found</h3>
+            <p className="text-gray-500 mb-6">Get started by creating a new cylinder</p>
+            <Button onClick={() => router.push("/cylinders/add")} className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Cylinder
             </Button>
           </div>
         ) : (
-          <div className="rounded-md border border-gray-700 overflow-hidden">
-            <Table>
-              <TableHeader className="bg-gray-900">
-                <TableRow className="hover:bg-gray-900/80 border-gray-800">
-                  <TableHead className="text-gray-400 font-medium">Code</TableHead>
-                  <TableHead className="text-gray-400 font-medium">Size</TableHead>
-                  <TableHead className="text-gray-400 font-medium">Gas Type</TableHead>
-                  <TableHead className="text-gray-400 font-medium">Status</TableHead>
-                  <TableHead className="text-gray-400 font-medium text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredCylinders.map((cylinder) => (
-                  <TableRow key={cylinder.id} className="hover:bg-gray-800/50 border-gray-800">
-                    <TableCell className="font-medium text-white">{cylinder.code}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="bg-gray-700/50 text-gray-300 border-gray-600">
-                        {cylinder.size}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-gray-300">{getGasTypeName(cylinder.gas_type_id)}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={getStatusColor(cylinder.status)}>
-                        {cylinder.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="border-gray-700 bg-gray-800 hover:bg-gray-700"
-                          onClick={() => router.push(`/cylinders/edit/${cylinder.id}`)}
-                        >
-                          <Edit className="h-4 w-4 text-gray-300" />
-                          <span className="sr-only">Edit</span>
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="border-gray-700 bg-gray-800 hover:bg-red-900/30 hover:border-red-800 text-gray-300 hover:text-red-400"
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-gray-50 border-b border-gray-200">
+                <TableHead className="py-4 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Code
+                </TableHead>
+                <TableHead className="py-4 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Size
+                </TableHead>
+                <TableHead className="py-4 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Gas Type
+                </TableHead>
+                <TableHead className="py-4 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </TableHead>
+                <TableHead className="py-4 px-6 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredCylinders.map((cylinder, index) => (
+                <TableRow
+                  key={cylinder.id}
+                  className={`border-b border-gray-200 hover:bg-gray-50 ${index % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}
+                >
+                  <TableCell className="py-4 px-6 text-sm font-medium text-gray-900">{cylinder.code}</TableCell>
+                  <TableCell className="py-4 px-6 text-sm text-gray-700">
+                    <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-200">
+                      {cylinder.size}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="py-4 px-6 text-sm text-gray-700">
+                    {getGasTypeName(cylinder.gas_type_id)}
+                  </TableCell>
+                  <TableCell className="py-4 px-6 text-sm">{getStatusBadge(cylinder.status)}</TableCell>
+                  <TableCell className="py-4 px-6 text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 px-3 text-gray-700 border-gray-300 hover:bg-gray-100"
+                        onClick={() => router.push(`/cylinders/edit/${cylinder.id}`)}
+                      >
+                        <Edit className="h-3.5 w-3.5 mr-1" />
+                        Edit
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 px-3 text-red-600 border-gray-300 hover:bg-red-50 hover:border-red-300 hover:text-red-700"
+                          >
+                            <Trash2 className="h-3.5 w-3.5 mr-1" />
+                            Delete
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="bg-white">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will permanently delete the cylinder. This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel className="border border-gray-300 text-gray-700">
+                              Cancel
+                            </AlertDialogCancel>
+                            <AlertDialogAction
+                              className="bg-red-600 text-white hover:bg-red-700"
+                              onClick={() => handleDelete(cylinder.id)}
                             >
-                              <Trash2 className="h-4 w-4" />
-                              <span className="sr-only">Delete</span>
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent className="bg-gray-800 border-gray-700 text-white">
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                              <AlertDialogDescription className="text-gray-400">
-                                This will permanently delete the cylinder. This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600">
-                                Cancel
-                              </AlertDialogCancel>
-                              <AlertDialogAction
-                                className="bg-red-600 text-white hover:bg-red-700"
-                                onClick={() => handleDelete(cylinder.id)}
-                              >
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         )}
-      </CardContent>
-    </Card>
+      </div>
+
+      <div className="p-4 border-t border-gray-200 bg-gray-50 flex items-center justify-between">
+        <div className="text-sm text-gray-500">Showing {filteredCylinders.length} cylinders</div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="h-8 px-3 text-gray-700 border-gray-300">
+            <Download className="h-3.5 w-3.5 mr-1" />
+            Export
+          </Button>
+          <Button variant="outline" size="sm" className="h-8 px-3 text-gray-700 border-gray-300">
+            <Upload className="h-3.5 w-3.5 mr-1" />
+            Import
+          </Button>
+        </div>
+      </div>
+    </div>
   )
 }

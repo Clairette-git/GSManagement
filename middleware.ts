@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
 // Paths that don't require authentication
-const publicPaths = ["/login", "/api/auth/login", "/api/auth/register", "/api/test-auth"]
+const publicPaths = ["/login", "/api/auth/login", "/api/auth/register", "/api/test-auth", "/simple-login"]
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -26,7 +26,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // For now, just accept any token without verification
+  // Token exists, proceed without verification in middleware
+  // Role-based access will be handled in the layout components
   return NextResponse.next()
 }
 
@@ -42,4 +43,3 @@ export const config = {
     "/((?!_next/static|_next/image|favicon.ico|public).*)",
   ],
 }
-

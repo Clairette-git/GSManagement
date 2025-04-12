@@ -152,9 +152,9 @@ export default function LoginPage() {
         </div>
 
         <div className="relative z-10 space-y-6">
-        
           <h2 className="text-4xl font-bold leading-tight">
-            Manage Gas <br />
+            Gas Supply &Inventory
+            Management System <br />
             <span className="relative">
               Supply
             </span>
@@ -176,11 +176,11 @@ export default function LoginPage() {
               <Image src="/DPMMK.png" alt="Kalisimbi Ltd Logo" width={160} height={40} />
             </div>
             <h1 className="text-2xl font-bold text-gray-900">
-              {activeTab === "signin" ? "Welcome back!" : "Create your account"}
+              {activeTab === "signin" ? "Welcome!" : "Create your account"}
             </h1>
             <p className="text-gray-500 mt-2">
               {activeTab === "signin"
-                ? "Sign in to access your gas management dashboard"
+                ? "Sign in to access your GSIM System"
                 : "Join us to manage your gas supply efficiently"}
             </p>
           </div>
@@ -273,6 +273,7 @@ export default function LoginPage() {
                 )}
               </button>
 
+              
 
               <p className="mt-6 text-center text-sm text-gray-600">
                 Don't have an account?{" "}
@@ -405,6 +406,9 @@ export default function LoginPage() {
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-gray-300"></div>
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-2 bg-white text-gray-500">Or continue with</span>
                   </div>
                 </div>
 
