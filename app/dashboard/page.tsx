@@ -17,7 +17,7 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Welcome back!</h2>
+          <h2 className="text-3xl font-bold tracking-tight">Welcome</h2>
           <p className="text-gray-400 mt-1">Monitor your gas supply and inventory at a glance</p>
         </div>
       </div>
@@ -31,10 +31,6 @@ export default async function DashboardPage() {
         <InventorySummary />
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <TasksList />
-        <CompletionChart />
-      </div>
 
       <div className="grid gap-6 md:grid-cols-3">
         <OptimizeWorkflow className="md:col-span-1" />

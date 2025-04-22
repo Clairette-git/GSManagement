@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default function CylindersPage() {
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Cylinders</h2>
           <p className="text-gray-400 mt-1">Manage your gas cylinders inventory</p>
@@ -23,7 +23,7 @@ export default function CylindersPage() {
             Add Cylinder
           </Button>
         </Link>
-      </div>
+      </div> */}
       <CylindersTable />
     </div>
   )

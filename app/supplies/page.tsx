@@ -14,15 +14,15 @@ export default function SuppliesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Supplies</h2>
-          <p className="text-gray-400 mt-1">Manage gas deliveries to hospitals</p>
+          <h2 className="text-3xl font-bold tracking-tight">GSIMS</h2>
+          <p className="text-gray-400 mt-1"></p>
         </div>
-        <Link href="/supplies/add">
+        {/* <Link href="/supplies/add">
           <Button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 border-0">
             <PlusCircle className="mr-2 h-4 w-4" />
             New Supply
           </Button>
-        </Link>
+        </Link> */}
       </div>
       <SuppliesTable />
     </div>

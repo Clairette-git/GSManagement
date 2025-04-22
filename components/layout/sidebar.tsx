@@ -204,14 +204,6 @@ export default function Sidebar({ className }: SidebarProps) {
               notifications={0}
             />
             <NavItem
-              href="/activity"
-              icon={Clock}
-              label="Activity"
-              isActive={pathname.startsWith("/activity")}
-              collapsed={collapsed}
-              notifications={0}
-            />
-            <NavItem
               href="/messages"
               icon={MessageSquare}
               label="Messages"

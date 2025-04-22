@@ -66,7 +66,7 @@ export default function RecentSupplies({ className }: RecentSuppliesProps) {
                 <div>
                   <h3 className="font-medium">{supply.hospital_name}</h3>
                   <p className="text-sm text-gray-400">
-                    {format(new Date(supply.date), "PPP")} • ${Number(supply.total_price).toFixed(2)}
+                    {format(new Date(supply.date), "PPP")} • RWF{Number(supply.total_price).toFixed(2)}
                   </p>
                 </div>
                 <Link href={`/supplies/${supply.id}`}>

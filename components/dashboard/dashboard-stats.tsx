@@ -5,7 +5,7 @@ import type React from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Supply } from "@/types"
 import { useEffect, useState } from "react"
-import { Cylinder, Droplet, TruckIcon, DollarSign } from "lucide-react"
+import { Cylinder, Droplet, TruckIcon, DollarSign,Wallet, CreditCard, Banknote, BanknoteIcon } from "lucide-react"
 
 export default function DashboardStats() {
   const [stats, setStats] = useState<{
@@ -95,9 +95,9 @@ export default function DashboardStats() {
       />
       <StatCard
         title="Total Revenue"
-        value={`$${stats.totalRevenue.toFixed(2)}`}
+        value={`RWF${stats.totalRevenue.toFixed(2)}`}
         description="Revenue from all supplies"
-        icon={<DollarSign className="h-5 w-5" />}
+        icon={<BanknoteIcon className="h-5 w-5" />}
         color="amber"
       />
     </>

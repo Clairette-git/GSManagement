@@ -58,8 +58,9 @@ export default function DashboardHeader() {
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gray-800 bg-gray-900 px-4 md:px-6">
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
-          <Image src="/DPMMK.png" alt="Kalisimbi Gas" width={32} height={32} className="rounded-md" />
-          <span className="font-semibold text-lg hidden md:inline-block">Kalisimbi Gas</span>
+        <Image src="/DPMMK.png" alt="Kalisimbi Gas" width={120} height={90} className="rounded-md" />
+        <span className="font-semibold text-lg text-white hidden md:inline-block"></span>
+
         </div>
       </div>
 
@@ -75,11 +76,6 @@ export default function DashboardHeader() {
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="hidden md:block text-sm">
-          <span className="text-gray-400 mr-2">Completion rate:</span>
-          <span className="font-medium text-blue-400">{completionRate}%</span>
-        </div>
-
         <Button variant="ghost" size="icon" className="relative text-gray-400 hover:text-white">
           <Bell className="h-5 w-5" />
           <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-blue-500"></span>
