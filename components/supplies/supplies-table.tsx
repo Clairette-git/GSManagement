@@ -213,7 +213,7 @@ export default function SuppliesTable() {
                   <TableCell className="py-4 px-6 text-sm text-gray-700">{supply.vehicle_plate}</TableCell>
                   <TableCell className="py-4 px-6 text-sm text-gray-700">{supply.driver_name}</TableCell>
                   <TableCell className="py-4 px-6 text-sm font-medium text-blue-600">
-                    ${Number(supply.total_price).toFixed(2)}
+                    RWF{Number(supply.total_price).toFixed(2)}
                   </TableCell>
                   <TableCell className="py-4 px-6 text-sm text-gray-500">{getTimeAgo(supply.date)}</TableCell>
                   <TableCell className="py-4 px-6 text-right">

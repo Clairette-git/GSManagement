@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { Cylinder, GasType } from "@/types"
-import { ArrowLeft, Plus, Save, Trash2, RefreshCw } from "lucide-react"
+import { ArrowLeft, Plus, Save, Trash2, RefreshCw, AlertCircle } from "lucide-react"
 
 export default function SupplyForm() {
   const router = useRouter()
@@ -35,14 +35,7 @@ export default function SupplyForm() {
       liters: number
       price: number
     }>
-  >([
-    {
-      cylinder_code: "",
-      gas_type_id: 0,
-      liters: 0,
-      price: 0,
-    },
-  ])
+  >([])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -72,6 +65,11 @@ export default function SupplyForm() {
       }
     }
   }, [])
+
+  // Track which cylinders are already selected
+  const selectedCylinderCodes = useMemo(() => {
+    return supplyDetails.map((detail) => detail.cylinder_code).filter((code) => code !== "")
+  }, [supplyDetails])
 
   const handleAddDetail = () => {
     setSupplyDetails([
@@ -190,6 +188,21 @@ export default function SupplyForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    if (supplyDetails.length === 0) {
+      alert("Please add at least one cylinder to the supply")
+      return
+    }
+
+    // Check if all required fields are filled
+    const hasEmptyFields = supplyDetails.some(
+      (detail) => !detail.cylinder_code || !detail.gas_type_id || !detail.liters,
+    )
+
+    if (hasEmptyFields) {
+      alert("Please fill in all cylinder details")
+      return
+    }
+
     if (!signatureDataURL) {
       alert("Recipient signature is required")
       return
@@ -232,9 +245,26 @@ export default function SupplyForm() {
     }
   }
 
-  const getAvailableCylinders = () => {
-    return cylinders.filter((c) => c.status === "in stock")
+  const getAvailableCylinders = (currentIndex: number) => {
+
+    const inStockCylinders = cylinders.filter((c) => c.status === "in stock")
+
+    return inStockCylinders.filter((cylinder) => {
+   
+      if (supplyDetails[currentIndex]?.cylinder_code === cylinder.code) {
+        return true
+      }
+
+
+      return !selectedCylinderCodes.includes(cylinder.code)
+    })
   }
+
+
+  const hasAvailableCylinders = useMemo(() => {
+    const inStockCylinders = cylinders.filter((c) => c.status === "in stock")
+    return inStockCylinders.length > selectedCylinderCodes.length
+  }, [cylinders, selectedCylinderCodes])
 
   return (
     <form onSubmit={handleSubmit}>
@@ -359,113 +389,160 @@ export default function SupplyForm() {
           </div>
 
           <div className="border-t border-gray-200 pt-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Supply Details</h3>
-
-            {supplyDetails.map((detail, index) => (
-              <div
-                key={index}
-                className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 p-4 border border-gray-200 rounded-lg bg-gray-50"
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium text-gray-900">Supply Details</h3>
+              <Button
+                type="button"
+                variant="outline"
+                className="border-gray-300 text-gray-700 hover:bg-gray-100"
+                onClick={handleAddDetail}
+                disabled={!hasAvailableCylinders}
               >
-                <div className="space-y-2">
-                  <Label htmlFor={`cylinder-${index}`} className="text-gray-700">
-                    Cylinder
-                  </Label>
-                  <Select
-                    value={detail.cylinder_code}
-                    onValueChange={(value) => handleDetailChange(index, "cylinder_code", value)}
+                <Plus className="h-4 w-4 mr-2" />
+                Add Cylinder
+              </Button>
+            </div>
+
+            {!hasAvailableCylinders && supplyDetails.length > 0 && (
+              <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md flex items-center text-amber-700">
+                <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
+                <p className="text-sm">All available cylinders have been selected.</p>
+              </div>
+            )}
+
+            {supplyDetails.length === 0 ? (
+              <div className="text-center py-8 border border-dashed border-gray-300 rounded-lg bg-gray-50">
+                <div className="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                  <Plus className="h-6 w-6 text-gray-400" />
+                </div>
+                <h4 className="text-sm font-medium text-gray-900 mb-1">No cylinders added</h4>
+                <p className="text-xs text-gray-500 mb-3">Add cylinders to this supply</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="border-gray-300 text-gray-700"
+                  onClick={handleAddDetail}
+                  disabled={!hasAvailableCylinders}
+                >
+                  Add First Cylinder
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {supplyDetails.map((detail, index) => (
+                  <div
+                    key={index}
+                    className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border border-gray-200 rounded-lg bg-gray-50 relative"
                   >
-                    <SelectTrigger id={`cylinder-${index}`} className="border-gray-300 text-gray-900">
-                      <SelectValue placeholder="Select cylinder" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-200">
-                      {getAvailableCylinders().map((cylinder) => (
-                        <SelectItem key={cylinder.id} value={cylinder.code} className="text-gray-900">
-                          {cylinder.code} ({cylinder.size})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                    <div className="absolute -top-3 -left-3 bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium">
+                      {index + 1}
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor={`gas-type-${index}`} className="text-gray-700">
-                    Gas Type
-                  </Label>
-                  <Select
-                    value={detail.gas_type_id.toString()}
-                    onValueChange={(value) => handleDetailChange(index, "gas_type_id", Number(value))}
-                  >
-                    <SelectTrigger id={`gas-type-${index}`} className="border-gray-300 text-gray-900">
-                      <SelectValue placeholder="Select gas type" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-200">
-                      {gasTypes.map((gasType) => (
-                        <SelectItem key={gasType.id} value={gasType.id.toString()} className="text-gray-900">
-                          {gasType.name} (${Number(gasType.price_per_liter).toFixed(2)}/L)
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`cylinder-${index}`} className="text-gray-700">
+                        Cylinder
+                      </Label>
+                      <Select
+                        value={detail.cylinder_code}
+                        onValueChange={(value) => handleDetailChange(index, "cylinder_code", value)}
+                      >
+                        <SelectTrigger id={`cylinder-${index}`} className="border-gray-300 text-gray-900">
+                          <SelectValue placeholder="Select cylinder" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-gray-200">
+                          {getAvailableCylinders(index).map((cylinder) => (
+                            <SelectItem key={cylinder.id} value={cylinder.code} className="text-gray-900">
+                              {cylinder.code} ({cylinder.size})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor={`liters-${index}`} className="text-gray-700">
-                    Liters
-                  </Label>
-                  <Input
-                    id={`liters-${index}`}
-                    type="number"
-                    min="0"
-                    step="0.1"
-                    placeholder="0.0"
-                    value={detail.liters || ""}
-                    onChange={(e) => handleDetailChange(index, "liters", Number(e.target.value))}
-                    required
-                    className="border-gray-300 focus:border-blue-500 text-gray-900 placeholder:text-gray-400"
-                  />
-                </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`gas-type-${index}`} className="text-gray-700">
+                        Gas Type
+                      </Label>
+                      <Select
+                        value={detail.gas_type_id.toString()}
+                        onValueChange={(value) => handleDetailChange(index, "gas_type_id", Number(value))}
+                      >
+                        <SelectTrigger id={`gas-type-${index}`} className="border-gray-300 text-gray-900">
+                          <SelectValue placeholder="Select gas type" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-gray-200">
+                          {gasTypes.map((gasType) => (
+                            <SelectItem key={gasType.id} value={gasType.id.toString()} className="text-gray-900">
+                              {gasType.name} (RWF{Number(gasType.price_per_liter).toFixed(2)}/L)
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                <div className="space-y-2 flex items-end gap-2">
-                  <div className="flex-1">
-                    <Label htmlFor={`price-${index}`} className="text-gray-700">
-                      Price ($)
-                    </Label>
-                    <Input
-                      id={`price-${index}`}
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      placeholder="0.00"
-                      value={detail.price.toFixed(2)}
-                      readOnly
-                      className="border-gray-300 bg-gray-100 text-gray-900"
-                    />
+                    <div className="space-y-2">
+                      <Label htmlFor={`liters-${index}`} className="text-gray-700">
+                        Liters
+                      </Label>
+                      <Input
+                        id={`liters-${index}`}
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        placeholder="0.0"
+                        value={detail.liters || ""}
+                        onChange={(e) => handleDetailChange(index, "liters", Number(e.target.value))}
+                        required
+                        className="border-gray-300 focus:border-blue-500 text-gray-900 placeholder:text-gray-400"
+                      />
+                    </div>
+
+                    <div className="space-y-2 flex items-end gap-2">
+                      <div className="flex-1">
+                        <Label htmlFor={`price-${index}`} className="text-gray-700">
+                          Price (RWF)
+                        </Label>
+                        <Input
+                          id={`price-${index}`}
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          placeholder="0.00"
+                          value={detail.price.toFixed(2)}
+                          readOnly
+                          className="border-gray-300 bg-gray-100 text-gray-900"
+                        />
+                      </div>
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-10 w-10 border-gray-300 text-red-600 hover:bg-red-50 hover:text-red-700"
+                        onClick={() => handleRemoveDetail(index)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
+                ))}
 
-                  {supplyDetails.length > 1 && (
+                {hasAvailableCylinders && (
+                  <div className="flex justify-end">
                     <Button
                       type="button"
                       variant="outline"
-                      size="icon"
-                      className="h-10 w-10 border-gray-300 text-red-600 hover:bg-red-50 hover:text-red-700"
-                      onClick={() => handleRemoveDetail(index)}
+                      className="mt-2 border-gray-300 text-gray-700"
+                      onClick={handleAddDetail}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Another Cylinder
                     </Button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
-            ))}
-
-            <Button
-              type="button"
-              variant="outline"
-              className="mt-2 border-gray-300 text-gray-700"
-              onClick={handleAddDetail}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Cylinder
-            </Button>
+            )}
           </div>
 
           <div className="border-t border-gray-200 pt-6">
@@ -487,8 +564,8 @@ export default function SupplyForm() {
               <div className="border border-gray-200 rounded bg-gray-50">
                 <canvas
                   ref={signatureCanvasRef}
-                  width={900}
-                  height={90}
+                  width={600}
+                  height={150}
                   className="w-full touch-none"
                   onMouseDown={startDrawing}
                   onMouseMove={draw}
@@ -508,7 +585,7 @@ export default function SupplyForm() {
           <div className="border-t border-gray-200 pt-6">
             <div className="flex justify-between items-center">
               <span className="text-lg font-medium text-gray-900">Total Price:</span>
-              <span className="text-xl font-bold text-blue-600">${calculateTotalPrice().toFixed(2)}</span>
+              <span className="text-xl font-bold text-blue-600">RWF{calculateTotalPrice().toFixed(2)}</span>
             </div>
           </div>
         </CardContent>
