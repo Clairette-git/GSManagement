@@ -11,10 +11,10 @@ import {
   Calendar,
   Filter,
   Plus,
-  Download,
-  Upload,
   Truck,
   ArrowLeft,
+  Loader2,
+  FileSpreadsheet,
 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
@@ -22,12 +22,14 @@ import { format } from "date-fns"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Link from "next/link"
+import { toast } from "sonner"
 
 export default function SuppliesTable() {
   const [supplies, setSupplies] = useState<Supply[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState<string>("")
   const [dateFilter, setDateFilter] = useState<string>("all")
+  const [processingInvoice, setProcessingInvoice] = useState<number | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -45,6 +47,70 @@ export default function SuppliesTable() {
 
     fetchSupplies()
   }, [])
+
+  const handleCreateInvoice = async (supplyId: number) => {
+    setProcessingInvoice(supplyId)
+
+    try {
+      // Use the new API endpoint
+      const response = await fetch(`/api/invoices/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ supplyId }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create invoice")
+      }
+
+      if (data.success && data.invoiceId) {
+        toast.success("Invoice created successfully")
+        router.push(`/invoices/${data.invoiceId}`)
+      } else {
+        throw new Error("Failed to create invoice")
+      }
+    } catch (error) {
+      console.error("Error creating invoice:", error)
+      toast.error("Failed to create invoice. Please try again.")
+    } finally {
+      setProcessingInvoice(null)
+    }
+  }
+
+  const exportToExcel = () => {
+    // Create a CSV string
+    let csvContent = "data:text/csv;charset=utf-8,"
+
+    // Add headers
+    csvContent += "ID,Hospital,Vehicle,Driver,Total Price,Date\n"
+
+    // Add data rows
+    filteredSupplies.forEach((supply) => {
+      csvContent += `${supply.id},`
+      csvContent += `"${supply.hospital_name}",`
+      csvContent += `"${supply.vehicle_plate}",`
+      csvContent += `"${supply.driver_name}",`
+      csvContent += `${supply.total_price},`
+      csvContent += `${format(new Date(supply.date), "yyyy-MM-dd")}\n`
+    })
+
+    // Create download link
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement("a")
+    link.setAttribute("href", encodedUri)
+    link.setAttribute("download", `supplies_export_${new Date().toISOString().split("T")[0]}.csv`)
+    document.body.appendChild(link)
+
+    // Trigger download
+    link.click()
+    document.body.removeChild(link)
+
+    toast.success("Export completed successfully")
+  }
 
   const filteredSupplies = supplies.filter((supply) => {
     const matchesSearch =
@@ -218,7 +284,7 @@ export default function SuppliesTable() {
                   <TableCell className="py-4 px-6 text-sm text-gray-500">{getTimeAgo(supply.date)}</TableCell>
                   <TableCell className="py-4 px-6 text-right">
                     <div className="flex justify-end gap-2">
-                      <Button
+                      {/* <Button
                         variant="outline"
                         size="sm"
                         className="h-8 px-3 text-gray-700 border-gray-300 hover:bg-gray-100"
@@ -226,15 +292,25 @@ export default function SuppliesTable() {
                       >
                         <Eye className="h-3.5 w-3.5 mr-1" />
                         View
-                      </Button>
+                      </Button> */}
                       <Button
                         variant="outline"
                         size="sm"
                         className="h-8 px-3 text-gray-700 border-gray-300 hover:bg-gray-100"
-                        onClick={() => router.push(`/invoices/create/${supply.id}`)}
+                        onClick={() => handleCreateInvoice(supply.id)}
+                        disabled={processingInvoice === supply.id}
                       >
-                        <FileText className="h-3.5 w-3.5 mr-1" />
-                        Invoice
+                        {processingInvoice === supply.id ? (
+                          <>
+                            <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            <FileText className="h-3.5 w-3.5 mr-1" />
+                            Invoice
+                          </>
+                        )}
                       </Button>
                       <Button
                         variant="outline"
@@ -257,13 +333,14 @@ export default function SuppliesTable() {
       <div className="p-4 border-t border-gray-200 bg-gray-50 flex items-center justify-between">
         <div className="text-sm text-gray-500">Showing {filteredSupplies.length} supplies</div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="h-8 px-3 text-gray-700 border-gray-300">
-            <Download className="h-3.5 w-3.5 mr-1" />
-            Export
-          </Button>
-          <Button variant="outline" size="sm" className="h-8 px-3 text-gray-700 border-gray-300">
-            <Upload className="h-3.5 w-3.5 mr-1" />
-            Import
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 px-3 text-gray-700 border-gray-300"
+            onClick={exportToExcel}
+          >
+            <FileSpreadsheet className="h-3.5 w-3.5 mr-1" />
+            Export to Excel
           </Button>
         </div>
       </div>

@@ -11,11 +11,11 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: "#0365ff",
-        secondary: "#adadad",
-        background: "#dee1e7",
-        "background-light": "#f0f0f0",
-        "border-color": "#d9d9d9",
+        primary: "#0ea5e9", // Blue that works well with teal
+        secondary: "#4b5563",
+        background: "#ccfbf1", // Light teal background
+        "background-light": "#f0fdfa",
+        "border-color": "#14b8a6",
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
@@ -89,4 +89,3 @@ const config: Config = {
   plugins: [],
 }
 export default config
-

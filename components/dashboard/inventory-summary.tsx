@@ -28,7 +28,7 @@ export default function InventorySummary({ className }: InventorySummaryProps) {
   }, [])
 
   return (
-    <Card className={`bg-gray-800 border-gray-700 ${className}`}>
+    <Card className="bg-teal-700 border-teal-600">
       <CardHeader>
         <CardTitle className="text-lg font-medium">Inventory Summary</CardTitle>
         <CardDescription className="text-gray-400">Current gas inventory levels</CardDescription>

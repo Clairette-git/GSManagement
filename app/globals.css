@@ -3,52 +3,52 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 222, 225, 231;
-  --background-end-rgb: 222, 225, 231;
-  --primary-color: #0365ff;
-  --text-color: #000000;
-  --text-secondary: #adadad;
-  --background-light: #f0f0f0;
-  --background-white: #ffffff;
-  --border-color: #d9d9d9;
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 15, 118, 110;
+  --background-end-rgb: 17, 94, 89;
+  --primary-color: #0ea5e9; /* Changed to a blue that works well with teal */
+  --text-color: #ffffff;
+  --text-secondary: #99f6e4;
+  --background-light: #ccfbf1;
+  --background-white: #f0fdfa;
+  --border-color: #14b8a6;
 
-  /* Dark theme variables */
-  --card: 215 28% 17%;
+  /* Teal theme variables */
+  --card: 168 80% 23%;
   --card-foreground: 0 0% 100%;
-  --popover: 215 28% 17%;
+  --popover: 168 80% 23%;
   --popover-foreground: 0 0% 100%;
-  --primary: 221 83% 53%;
+  --primary: 198 93% 60%; /* Blue that works well with teal */
   --primary-foreground: 0 0% 100%;
-  --secondary: 215 25% 27%;
+  --secondary: 168 84% 15%;
   --secondary-foreground: 0 0% 100%;
-  --muted: 215 25% 27%;
-  --muted-foreground: 217 10% 64%;
-  --accent: 215 25% 27%;
+  --muted: 168 84% 15%;
+  --muted-foreground: 166 63% 93%;
+  --accent: 198 93% 60%; /* Blue that works well with teal */
   --accent-foreground: 0 0% 100%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
-  --border: 215 28% 17%;
-  --input: 215 28% 17%;
-  --ring: 221 83% 53%;
+  --border: 167 68% 38%;
+  --input: 167 68% 38%;
+  --ring: 198 93% 60%; /* Blue that works well with teal */
   --radius: 0.5rem;
 
   /* Chart colors */
-  --chart-1: 221 83% 53%;
+  --chart-1: 198 93% 60%; /* Blue that works well with teal */
   --chart-2: 262 83% 58%;
   --chart-3: 142 71% 45%;
   --chart-4: 31 95% 44%;
   --chart-5: 0 84% 60%;
 
-  /* Sidebar colors */
-  --sidebar-background: 215 28% 17%;
+  /* Sidebar colors - teal theme */
+  --sidebar-background: 168 80% 23%;
   --sidebar-foreground: 0 0% 100%;
-  --sidebar-primary: 221 83% 53%;
+  --sidebar-primary: 198 93% 60%; /* Blue that works well with teal */
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 215 25% 27%;
+  --sidebar-accent: 168 84% 15%;
   --sidebar-accent-foreground: 0 0% 100%;
-  --sidebar-border: 215 28% 17%;
-  --sidebar-ring: 221 83% 53%;
+  --sidebar-border: 167 68% 38%;
+  --sidebar-ring: 198 93% 60%; /* Blue that works well with teal */
 }
 
 body {
@@ -62,50 +62,52 @@ body {
   }
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar - teal theme */
 .scrollbar-thin::-webkit-scrollbar {
   width: 4px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-track {
-  background: rgba(31, 41, 55, 0.5);
+  background: rgba(20, 184, 166, 0.3);
   border-radius: 10px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: rgba(75, 85, 99, 0.5);
+  background: rgba(13, 148, 136, 0.5);
   border-radius: 10px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: rgba(107, 114, 128, 0.7);
+  background: rgba(15, 118, 110, 0.7);
 }
 
-/* Dark theme specific styles */
-.dark-theme-card {
-  @apply bg-gray-800 border-gray-700;
-}
+/* Teal theme specific styles */
+@layer components {
+  .dark-theme-card {
+    @apply bg-teal-700 border-teal-600;
+  }
 
-.dark-theme-input {
-  @apply bg-gray-900 border-gray-700 focus:border-blue-500 text-white;
-}
+  .dark-theme-input {
+    @apply bg-teal-800 border-teal-600 focus:border-blue-500 text-white;
+  }
 
-.dark-theme-button {
-  @apply bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0;
-}
+  .dark-theme-button {
+    @apply bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0;
+  }
 
-.dark-theme-button-outline {
-  @apply border-gray-700 bg-gray-800 hover:bg-gray-700 text-gray-300;
-}
+  .dark-theme-button-outline {
+    @apply border-teal-600 bg-teal-700 hover:bg-teal-600 text-white;
+  }
 
-.dark-theme-table-header {
-  @apply bg-gray-900 text-gray-400 font-medium;
-}
+  .dark-theme-table-header {
+    @apply bg-teal-800 text-teal-100 font-medium;
+  }
 
-.dark-theme-table-row {
-  @apply hover:bg-gray-800/50 border-gray-800;
-}
+  .dark-theme-table-row {
+    @apply hover:bg-teal-600/50 border-teal-600;
+  }
 
-.dark-theme-badge {
-  @apply bg-gray-700/50 text-gray-300 border-gray-600;
+  .dark-theme-badge {
+    @apply bg-teal-600/50 text-white border-teal-500;
+  }
 }

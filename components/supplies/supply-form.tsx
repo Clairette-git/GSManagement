@@ -19,6 +19,8 @@ export default function SupplyForm() {
   const [gasTypes, setGasTypes] = useState<GasType[]>([])
   const signatureCanvasRef = useRef<HTMLCanvasElement>(null)
   const [signatureDataURL, setSignatureDataURL] = useState<string | null>(null)
+  const [delivererSignatureDataURL, setDelivererSignatureDataURL] = useState<string | null>(null)
+  const delivererSignatureCanvasRef = useRef<HTMLCanvasElement>(null)
 
   // Form state
   const [date, setDate] = useState(new Date().toISOString().split("T")[0])
@@ -55,15 +57,19 @@ export default function SupplyForm() {
   }, [])
 
   useEffect(() => {
-    // Initialize signature canvas
-    const canvas = signatureCanvasRef.current
-    if (canvas) {
-      const ctx = canvas.getContext("2d")
-      if (ctx) {
-        ctx.lineWidth = 2
-        ctx.strokeStyle = "#000000"
+    // Initialize signature canvases
+    const initCanvas = (canvas: HTMLCanvasElement | null) => {
+      if (canvas) {
+        const ctx = canvas.getContext("2d")
+        if (ctx) {
+          ctx.lineWidth = 2
+          ctx.strokeStyle = "#000000"
+        }
       }
     }
+
+    initCanvas(signatureCanvasRef.current)
+    initCanvas(delivererSignatureCanvasRef.current)
   }, [])
 
   // Track which cylinders are already selected
@@ -93,7 +99,32 @@ export default function SupplyForm() {
     const newDetails = [...supplyDetails]
     newDetails[index] = { ...newDetails[index], [field]: value }
 
-    // If gas type changes, update price
+    // If cylinder code changes, update gas type and automatically set liters based on cylinder size
+    if (field === "cylinder_code") {
+      const cylinder = cylinders.find((c) => c.code === value)
+      if (cylinder) {
+        // Set gas type if available
+        if (cylinder.gas_type_id) {
+          newDetails[index].gas_type_id = cylinder.gas_type_id
+        }
+
+        // Automatically set liters based on cylinder size
+        if (cylinder.size) {
+          // Extract numeric part from size (e.g., "50L" -> 50)
+          const sizeNumber = Number.parseInt(cylinder.size.replace(/[^0-9]/g, ""))
+          newDetails[index].liters = sizeNumber
+
+          // Update price based on gas type and liters
+          const gasType = gasTypes.find((g) => g.id === cylinder.gas_type_id)
+          if (gasType) {
+            const pricePerLiter = Number(gasType.price_per_liter)
+            newDetails[index].price = pricePerLiter * sizeNumber
+          }
+        }
+      }
+    }
+
+    // If gas type changes or liters change, update price
     if (field === "gas_type_id" || field === "liters") {
       const gasType = gasTypes.find((g) => g.id === Number(newDetails[index].gas_type_id))
       if (gasType) {
@@ -110,14 +141,17 @@ export default function SupplyForm() {
     return supplyDetails.reduce((total, detail) => total + Number(detail.price), 0)
   }
 
-  // Signature pad functionality
+  // Signature pad functionality for recipient
   let isDrawing = false
   let lastX = 0
   let lastY = 0
 
-  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+  const startDrawing = (
+    e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>,
+    canvasRef: React.RefObject<HTMLCanvasElement | null>,
+  ) => {
     isDrawing = true
-    const canvas = signatureCanvasRef.current
+    const canvas = canvasRef.current
     if (!canvas) return
 
     const rect = canvas.getBoundingClientRect()
@@ -133,10 +167,13 @@ export default function SupplyForm() {
     }
   }
 
-  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+  const draw = (
+    e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>,
+    canvasRef: React.RefObject<HTMLCanvasElement | null>,
+  ) => {
     if (!isDrawing) return
 
-    const canvas = signatureCanvasRef.current
+    const canvas = canvasRef.current
     if (!canvas) return
 
     const ctx = canvas.getContext("2d")
@@ -164,23 +201,29 @@ export default function SupplyForm() {
     lastY = currentY
   }
 
-  const stopDrawing = () => {
+  const stopDrawing = (
+    canvasRef: React.RefObject<HTMLCanvasElement | null>,
+    setSignature: (url: string | null) => void,
+  ) => {
     isDrawing = false
 
     // Save the signature as data URL
-    const canvas = signatureCanvasRef.current
+    const canvas = canvasRef.current
     if (canvas) {
-      setSignatureDataURL(canvas.toDataURL())
+      setSignature(canvas.toDataURL())
     }
   }
 
-  const clearSignature = () => {
-    const canvas = signatureCanvasRef.current
+  const clearSignature = (
+    canvasRef: React.RefObject<HTMLCanvasElement | null>,
+    setSignature: (url: string | null) => void,
+  ) => {
+    const canvas = canvasRef.current
     if (canvas) {
       const ctx = canvas.getContext("2d")
       if (ctx) {
         ctx.clearRect(0, 0, canvas.width, canvas.height)
-        setSignatureDataURL(null)
+        setSignature(null)
       }
     }
   }
@@ -208,6 +251,11 @@ export default function SupplyForm() {
       return
     }
 
+    if (!delivererSignatureDataURL) {
+      alert("Deliverer signature is required")
+      return
+    }
+
     setIsLoading(true)
 
     try {
@@ -225,6 +273,7 @@ export default function SupplyForm() {
           technician_name: technicianName,
           recipient_name: recipientName,
           recipient_signature: signatureDataURL,
+          deliverer_signature: delivererSignatureDataURL,
           total_price: calculateTotalPrice(),
           supply_details: supplyDetails,
         }),
@@ -245,25 +294,31 @@ export default function SupplyForm() {
     }
   }
 
+  // Get available cylinders that haven't been selected yet
   const getAvailableCylinders = (currentIndex: number) => {
+    // Get all filled cylinders that are active
+    const filledCylinders = cylinders.filter(
+      (c) => c.status === "filled" && c.is_active !== false && c.filling_end_time,
+    )
 
-    const inStockCylinders = cylinders.filter((c) => c.status === "in stock")
-
-    return inStockCylinders.filter((cylinder) => {
-   
+    // Filter out cylinders that are already selected in other rows
+    return filledCylinders.filter((cylinder) => {
+      // If this cylinder is already selected in the current row, include it
       if (supplyDetails[currentIndex]?.cylinder_code === cylinder.code) {
         return true
       }
 
-
+      // Otherwise, exclude it if it's selected in any other row
       return !selectedCylinderCodes.includes(cylinder.code)
     })
   }
 
-
+  // Check if we have any available cylinders left
   const hasAvailableCylinders = useMemo(() => {
-    const inStockCylinders = cylinders.filter((c) => c.status === "in stock")
-    return inStockCylinders.length > selectedCylinderCodes.length
+    const filledCylinders = cylinders.filter(
+      (c) => c.status === "filled" && c.is_active !== false && c.filling_end_time,
+    )
+    return filledCylinders.length > selectedCylinderCodes.length
   }, [cylinders, selectedCylinderCodes])
 
   return (
@@ -403,10 +458,17 @@ export default function SupplyForm() {
               </Button>
             </div>
 
+            {!hasAvailableCylinders && supplyDetails.length === 0 && (
+              <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md flex items-center text-amber-700">
+                <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
+                <p className="text-sm">No filled cylinders are available for delivery. Please fill cylinders first.</p>
+              </div>
+            )}
+
             {!hasAvailableCylinders && supplyDetails.length > 0 && (
               <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md flex items-center text-amber-700">
                 <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
-                <p className="text-sm">All available cylinders have been selected.</p>
+                <p className="text-sm">All available filled cylinders have been selected.</p>
               </div>
             )}
 
@@ -464,21 +526,12 @@ export default function SupplyForm() {
                       <Label htmlFor={`gas-type-${index}`} className="text-gray-700">
                         Gas Type
                       </Label>
-                      <Select
-                        value={detail.gas_type_id.toString()}
-                        onValueChange={(value) => handleDetailChange(index, "gas_type_id", Number(value))}
-                      >
-                        <SelectTrigger id={`gas-type-${index}`} className="border-gray-300 text-gray-900">
-                          <SelectValue placeholder="Select gas type" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white border-gray-200">
-                          {gasTypes.map((gasType) => (
-                            <SelectItem key={gasType.id} value={gasType.id.toString()} className="text-gray-900">
-                              {gasType.name} (RWF{Number(gasType.price_per_liter).toFixed(2)}/L)
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Input
+                        id={`gas-type-${index}`}
+                        value={detail.gas_type_id ? gasTypes.find((g) => g.id === detail.gas_type_id)?.name || "" : ""}
+                        readOnly
+                        className="border-gray-300 bg-gray-100 text-gray-900"
+                      />
                     </div>
 
                     <div className="space-y-2">
@@ -546,16 +599,53 @@ export default function SupplyForm() {
           </div>
 
           <div className="border-t border-gray-200 pt-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Recipient Signature</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Deliverer Signature</h3>
             <div className="border border-gray-300 rounded-lg p-2 bg-white">
               <div className="flex justify-between items-center mb-2">
-                <Label className="text-gray-700">Sign below</Label>
+                <Label className="text-gray-700">Sign below (Deliverer)</Label>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   className="h-8 px-3 text-gray-700 border-gray-300"
-                  onClick={clearSignature}
+                  onClick={() => clearSignature(delivererSignatureCanvasRef, setDelivererSignatureDataURL)}
+                >
+                  <RefreshCw className="h-3.5 w-3.5 mr-1" />
+                  Clear
+                </Button>
+              </div>
+              <div className="border border-gray-200 rounded bg-gray-50">
+                <canvas
+                  ref={delivererSignatureCanvasRef}
+                  width={600}
+                  height={150}
+                  className="w-full touch-none"
+                  onMouseDown={(e) => startDrawing(e, delivererSignatureCanvasRef)}
+                  onMouseMove={(e) => draw(e, delivererSignatureCanvasRef)}
+                  onMouseUp={() => stopDrawing(delivererSignatureCanvasRef, setDelivererSignatureDataURL)}
+                  onMouseLeave={() => stopDrawing(delivererSignatureCanvasRef, setDelivererSignatureDataURL)}
+                  onTouchStart={(e) => startDrawing(e, delivererSignatureCanvasRef)}
+                  onTouchMove={(e) => draw(e, delivererSignatureCanvasRef)}
+                  onTouchEnd={() => stopDrawing(delivererSignatureCanvasRef, setDelivererSignatureDataURL)}
+                ></canvas>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                {delivererSignatureDataURL ? "Signature captured" : "Please sign above to confirm delivery"}
+              </p>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-200 pt-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Recipient Signature</h3>
+            <div className="border border-gray-300 rounded-lg p-2 bg-white">
+              <div className="flex justify-between items-center mb-2">
+                <Label className="text-gray-700">Sign below (Recipient)</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-3 text-gray-700 border-gray-300"
+                  onClick={() => clearSignature(signatureCanvasRef, setSignatureDataURL)}
                 >
                   <RefreshCw className="h-3.5 w-3.5 mr-1" />
                   Clear
@@ -567,13 +657,13 @@ export default function SupplyForm() {
                   width={600}
                   height={150}
                   className="w-full touch-none"
-                  onMouseDown={startDrawing}
-                  onMouseMove={draw}
-                  onMouseUp={stopDrawing}
-                  onMouseLeave={stopDrawing}
-                  onTouchStart={startDrawing}
-                  onTouchMove={draw}
-                  onTouchEnd={stopDrawing}
+                  onMouseDown={(e) => startDrawing(e, signatureCanvasRef)}
+                  onMouseMove={(e) => draw(e, signatureCanvasRef)}
+                  onMouseUp={() => stopDrawing(signatureCanvasRef, setSignatureDataURL)}
+                  onMouseLeave={() => stopDrawing(signatureCanvasRef, setSignatureDataURL)}
+                  onTouchStart={(e) => startDrawing(e, signatureCanvasRef)}
+                  onTouchMove={(e) => draw(e, signatureCanvasRef)}
+                  onTouchEnd={() => stopDrawing(signatureCanvasRef, setSignatureDataURL)}
                 ></canvas>
               </div>
               <p className="text-xs text-gray-500 mt-1">

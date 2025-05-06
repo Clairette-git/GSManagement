@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import type { Cylinder, GasType } from "@/types"
-import { Edit, Trash2, Search, Filter, Plus, Download, Upload, ArrowLeft } from "lucide-react"
+import { Edit, Trash2, Search, Filter, Plus, Download, Upload, ArrowLeft, RefreshCw, CheckCircle } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
@@ -67,6 +67,37 @@ export default function CylindersTable() {
     }
   }
 
+  const handleMarkAsReturned = async (id: number) => {
+    try {
+      const cylinder = cylinders.find((c) => c.id === id)
+      if (!cylinder) return
+
+      const response = await fetch(`/api/cylinders/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...cylinder,
+          status: "returned",
+          gas_type_id: null,
+          is_active: false,
+        }),
+      })
+
+      if (response.ok) {
+        // Update the cylinder in the local state
+        setCylinders(
+          cylinders.map((c) => (c.id === id ? { ...c, status: "returned", gas_type_id: null, is_active: false } : c)),
+        )
+      } else {
+        console.error("Failed to mark cylinder as returned")
+      }
+    } catch (error) {
+      console.error("Error marking cylinder as returned:", error)
+    }
+  }
+
   const getGasTypeName = (gasTypeId: number | null) => {
     if (!gasTypeId) return "Empty"
     const gasType = gasTypes.find((gt) => gt.id === gasTypeId)
@@ -81,17 +112,33 @@ export default function CylindersTable() {
     return matchesStatus && matchesSize && matchesSearch
   })
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, isActive: boolean) => {
+    if (!isActive) {
+      return <Badge className="bg-gray-100 text-gray-800 border-gray-200">Inactive</Badge>
+    }
+
     switch (status) {
       case "in stock":
-        return <Badge className="bg-green-100 text-green-800 border-green-200">Active</Badge>
+        return <Badge className="bg-green-100 text-green-800 border-green-200">In Stock</Badge>
       case "delivered":
         return <Badge className="bg-blue-100 text-blue-800 border-blue-200">Delivered</Badge>
       case "returned":
         return <Badge className="bg-amber-100 text-amber-800 border-amber-200">Returned</Badge>
+      case "filling":
+        return <Badge className="bg-purple-100 text-purple-800 border-purple-200">Filling</Badge>
+      case "filled":
+        return <Badge className="bg-indigo-100 text-indigo-800 border-indigo-200">Filled</Badge>
+      case "empty":
+        return <Badge className="bg-red-100 text-red-800 border-red-200">Empty</Badge>
       default:
         return <Badge className="bg-gray-100 text-gray-800 border-gray-200">{status}</Badge>
     }
+  }
+
+  const formatDateTime = (dateTimeString?: string | null) => {
+    if (!dateTimeString) return "N/A"
+    const date = new Date(dateTimeString)
+    return date.toLocaleString()
   }
 
   return (
@@ -146,6 +193,9 @@ export default function CylindersTable() {
                 <SelectItem value="in stock">In Stock</SelectItem>
                 <SelectItem value="delivered">Delivered</SelectItem>
                 <SelectItem value="returned">Returned</SelectItem>
+                <SelectItem value="filling">Filling</SelectItem>
+                <SelectItem value="filled">Filled</SelectItem>
+                <SelectItem value="empty">Empty</SelectItem>
               </SelectContent>
             </Select>
             <Select value={sizeFilter} onValueChange={setSizeFilter}>
@@ -199,6 +249,12 @@ export default function CylindersTable() {
                 <TableHead className="py-4 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </TableHead>
+                <TableHead className="py-4 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Filling Start
+                </TableHead>
+                <TableHead className="py-4 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Filling End
+                </TableHead>
                 <TableHead className="py-4 px-6 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </TableHead>
@@ -219,9 +275,41 @@ export default function CylindersTable() {
                   <TableCell className="py-4 px-6 text-sm text-gray-700">
                     {getGasTypeName(cylinder.gas_type_id)}
                   </TableCell>
-                  <TableCell className="py-4 px-6 text-sm">{getStatusBadge(cylinder.status)}</TableCell>
+                  <TableCell className="py-4 px-6 text-sm">
+                    {getStatusBadge(cylinder.status, cylinder.is_active !== false)}
+                  </TableCell>
+                  <TableCell className="py-4 px-6 text-sm text-gray-700">
+                    {formatDateTime(cylinder.filling_start_time)}
+                  </TableCell>
+                  <TableCell className="py-4 px-6 text-sm text-gray-700">
+                    {formatDateTime(cylinder.filling_end_time)}
+                  </TableCell>
                   <TableCell className="py-4 px-6 text-right">
                     <div className="flex justify-end gap-2">
+                      {cylinder.status === "delivered" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 px-3 text-green-600 border-gray-300 hover:bg-green-50 hover:text-green-700"
+                          onClick={() => handleMarkAsReturned(cylinder.id)}
+                        >
+                          <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                          Mark Returned
+                        </Button>
+                      )}
+
+                      {cylinder.status === "filling" && !cylinder.filling_end_time && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 px-3 text-purple-600 border-gray-300 hover:bg-purple-50 hover:text-purple-700"
+                          onClick={() => router.push(`/cylinders/edit/${cylinder.id}`)}
+                        >
+                          <RefreshCw className="h-3.5 w-3.5 mr-1" />
+                          Update Filling
+                        </Button>
+                      )}
+
                       <Button
                         variant="outline"
                         size="sm"

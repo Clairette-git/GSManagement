@@ -16,6 +16,7 @@ const badgeVariants = cva(
         info: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
         warning: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
         danger: "bg-red-500/10 text-red-400 border border-red-500/20",
+        teal: "bg-teal-600 text-teal-50 border border-teal-500", // Added teal variant
       },
     },
     defaultVariants: {

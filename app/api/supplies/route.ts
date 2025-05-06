@@ -36,8 +36,12 @@ export async function POST(request: Request) {
       technician_name,
       recipient_name,
       recipient_signature,
+      deliverer_signature,
       total_price,
       supply_details,
+      create_invoice,
+      invoice_status,
+      invoice_date,
     } = await request.json()
 
     // Validate required fields
@@ -65,8 +69,8 @@ export async function POST(request: Request) {
       const [supplyResult] = await db.query(
         `INSERT INTO supplies 
         (date, hospital_name, vehicle_plate, driver_name, storekeeper_name, 
-        technician_name, recipient_name, recipient_signature, total_price) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        technician_name, recipient_name, recipient_signature, deliverer_signature, total_price) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           date,
           hospital_name,
@@ -76,6 +80,7 @@ export async function POST(request: Request) {
           technician_name,
           recipient_name,
           recipient_signature || null,
+          deliverer_signature || null,
           total_price,
         ],
       )
@@ -91,9 +96,12 @@ export async function POST(request: Request) {
         }
 
         // Check if cylinder exists
-        const [cylinders] = await db.query("SELECT * FROM cylinders WHERE code = ?", [detail.cylinder_code])
+        const [cylinders] = (await db.query("SELECT * FROM cylinders WHERE code = ?", [detail.cylinder_code])) as [
+          any[],
+          any,
+        ]
 
-        if ((cylinders as any[]).length === 0) {
+        if (cylinders.length === 0) {
           await db.query("ROLLBACK")
           return NextResponse.json({ message: `Cylinder with code ${detail.cylinder_code} not found` }, { status: 400 })
         }
@@ -113,12 +121,26 @@ export async function POST(request: Request) {
         ])
       }
 
+      // Create invoice if requested
+      let invoiceId = null
+      if (create_invoice) {
+        const [invoiceResult] = await db.query(
+          `INSERT INTO invoices (delivery_id, amount, status, date) VALUES (?, ?, ?, ?)`,
+          [supplyId, total_price, invoice_status || "unpaid", invoice_date || date],
+        )
+
+        invoiceId = (invoiceResult as any).insertId
+      }
+
       // Commit transaction
       await db.query("COMMIT")
 
       return NextResponse.json({
         message: "Supply created successfully",
-        data: { id: supplyId },
+        data: {
+          id: supplyId,
+          invoiceId: invoiceId,
+        },
       })
     } catch (error) {
       // Rollback transaction on error
@@ -130,4 +152,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Internal server error" }, { status: 500 })
   }
 }
-

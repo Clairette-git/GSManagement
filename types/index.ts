@@ -16,7 +16,10 @@ export interface Cylinder {
   code: string
   size: "10L" | "40L" | "50L"
   gas_type_id: number | null
-  status: "in stock" | "delivered" | "returned"
+  status: "in stock" | "delivered" | "returned" | "filling" | "filled" | "empty"
+  filling_start_time?: string | null
+  filling_end_time?: string | null
+  is_active: boolean
 }
 
 export interface Supply {
@@ -55,4 +58,3 @@ export interface Invoice {
   status: "paid" | "unpaid"
   date: string
 }
-

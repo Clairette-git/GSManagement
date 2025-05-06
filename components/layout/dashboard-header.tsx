@@ -1,119 +1,95 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Bell, Search, User, Settings } from "lucide-react"
+import { useState } from "react"
+import { Bell, Menu, Search, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import Image from "next/image"
+import Link from "next/link"
 
 export default function DashboardHeader() {
-  const [user, setUser] = useState<{ username: string; role: string } | null>(null)
-  const [completionRate, setCompletionRate] = useState<number>(0)
-
-  useEffect(() => {
-    // Get user from localStorage
-    const userStr = localStorage.getItem("user")
-    if (userStr) {
-      try {
-        const userData = JSON.parse(userStr)
-        setUser(userData)
-      } catch (error) {
-        console.error("Error parsing user data:", error)
-      }
-    }
-
-    // Simulate loading completion rate
-    const randomRate = Math.floor(Math.random() * 30) + 70 // Random between 70-100%
-    setCompletionRate(randomRate)
-  }, [])
-
-  const handleLogout = async () => {
-    try {
-      // Clear localStorage
-      localStorage.removeItem("auth_token")
-      localStorage.removeItem("user")
-
-      // Call logout API
-      await fetch("/api/auth/logout", {
-        method: "POST",
-      })
-
-      // Redirect to login
-      window.location.href = "/login"
-    } catch (error) {
-      console.error("Logout error:", error)
-      // Force redirect even if API fails
-      window.location.href = "/login"
-    }
-  }
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gray-800 bg-gray-900 px-4 md:px-6">
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-        <Image src="/DPMMK.png" alt="Kalisimbi Gas" width={120} height={90} className="rounded-md" />
-        <span className="font-semibold text-lg text-white hidden md:inline-block"></span>
-
-        </div>
-      </div>
-
-      <div className="flex-1 mx-8">
-        <div className="relative max-w-md mx-auto md:mx-0">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-          <input
-            type="search"
-            placeholder="Search..."
-            className="w-full bg-gray-800 border border-gray-700 rounded-md py-2 pl-8 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
-      </div>
-
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" className="relative text-gray-400 hover:text-white">
-          <Bell className="h-5 w-5" />
-          <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-blue-500"></span>
-        </Button>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 bg-gray-800">
-              <User className="h-5 w-5 text-gray-400" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 bg-gray-800 border-gray-700 text-gray-200">
-            <DropdownMenuLabel>
-              {user ? (
-                <div>
-                  <p className="font-medium">{user.username}</p>
-                  <p className="text-xs text-gray-400 capitalize">{user.role}</p>
+    <header className="bg-teal-700 border-b border-teal-600">
+      <div className="px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between">
+          <div className="flex items-center">
+            <div className="flex-shrink-0 md:hidden">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:bg-teal-600"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
+                <Menu className="h-6 w-6" />
+              </Button>
+            </div>
+            <div className="hidden md:block">
+              <div className="ml-10 flex items-baseline space-x-4">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Search className="h-5 w-5 text-teal-300" aria-hidden="true" />
+                  </div>
+                  <input
+                    type="text"
+                    name="search"
+                    id="search"
+                    className="block w-full pl-10 pr-3 py-2 border border-teal-600 rounded-md leading-5 bg-teal-800 text-teal-100 placeholder-teal-400 focus:outline-none focus:bg-teal-900 focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                    placeholder="Search"
+                  />
                 </div>
-              ) : (
-                "My Account"
-              )}
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator className="bg-gray-700" />
-            <DropdownMenuItem className="hover:bg-gray-700 cursor-pointer">
-              <User className="mr-2 h-4 w-4" />
-              <span>Profile</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="hover:bg-gray-700 cursor-pointer">
-              <Settings className="mr-2 h-4 w-4" />
-              <span>Settings</span>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator className="bg-gray-700" />
-            <DropdownMenuItem onClick={handleLogout} className="hover:bg-gray-700 cursor-pointer text-red-400">
-              <span>Logout</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              </div>
+            </div>
+          </div>
+          <div className="hidden md:block">
+            <div className="ml-4 flex items-center md:ml-6">
+              <Button variant="ghost" size="icon" className="text-white hover:bg-teal-600">
+                <Bell className="h-6 w-6" />
+              </Button>
+
+              <div className="ml-3 relative">
+                <Link href="/profile">
+                  <div className="flex items-center max-w-xs bg-teal-800 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-teal-800 focus:ring-white p-1">
+                    <span className="sr-only">Open user menu</span>
+                    <User className="h-6 w-6 rounded-full text-teal-200" />
+                  </div>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Mobile menu, show/hide based on menu state */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden">
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-teal-700">
+            <Link
+              href="/dashboard"
+              className="text-white hover:bg-teal-600 block px-3 py-2 rounded-md text-base font-medium"
+            >
+              Dashboard
+            </Link>
+            <Link
+              href="/inventory"
+              className="text-teal-100 hover:bg-teal-600 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+            >
+              Inventory
+            </Link>
+            <Link
+              href="/cylinders"
+              className="text-teal-100 hover:bg-teal-600 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+            >
+              Cylinders
+            </Link>
+            <Link
+              href="/supplies"
+              className="text-teal-100 hover:bg-teal-600 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+            >
+              Supplies
+            </Link>
+          </div>
+        </div>
+      )}
     </header>
   )
 }

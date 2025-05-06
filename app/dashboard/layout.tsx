@@ -12,7 +12,7 @@ export default function DashboardLayout({
 }) {
   return (
     <RoleAccessControl>
-      <div className="flex min-h-screen bg-gray-100">
+      <div className="flex min-h-screen bg-teal-100">
         <Sidebar />
         <div className="flex flex-col flex-1">
           <DashboardHeader />

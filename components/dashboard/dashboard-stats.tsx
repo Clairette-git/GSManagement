@@ -5,7 +5,7 @@ import type React from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Supply } from "@/types"
 import { useEffect, useState } from "react"
-import { Cylinder, Droplet, TruckIcon, DollarSign,Wallet, CreditCard, Banknote, BanknoteIcon } from "lucide-react"
+import { Cylinder, Droplet, TruckIcon, DollarSign, Wallet } from 'lucide-react'
 
 export default function DashboardStats() {
   const [stats, setStats] = useState<{
@@ -59,10 +59,10 @@ export default function DashboardStats() {
     return (
       <>
         {[1, 2, 3, 4].map((i) => (
-          <Card key={i} className="bg-gray-800 border-gray-700 animate-pulse">
+          <Card key={i} className="bg-teal-700 border-teal-600 animate-pulse">
             <CardContent className="p-6">
-              <div className="h-10 bg-gray-700 rounded-md mb-2"></div>
-              <div className="h-6 bg-gray-700 rounded-md w-1/2"></div>
+              <div className="h-10 bg-teal-600 rounded-md mb-2"></div>
+              <div className="h-6 bg-teal-600 rounded-md w-1/2"></div>
             </CardContent>
           </Card>
         ))}
@@ -77,7 +77,7 @@ export default function DashboardStats() {
         value={stats.totalCylinders}
         description="Cylinders in the system"
         icon={<Cylinder className="h-5 w-5" />}
-        color="blue"
+        color="blue" // Keeping blue
       />
       <StatCard
         title="Gas Types"
@@ -94,12 +94,12 @@ export default function DashboardStats() {
         color="purple"
       />
       <StatCard
-        title="Total Revenue"
-        value={`RWF${stats.totalRevenue.toFixed(2)}`}
-        description="Revenue from all supplies"
-        icon={<BanknoteIcon className="h-5 w-5" />}
-        color="amber"
-      />
+  title="Total Revenue"
+  value={`RWF ${stats.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+  description="Revenue from all supplies"
+  icon={<Wallet className="h-5 w-5" />}
+  color="amber"
+/>
     </>
   )
 }
@@ -121,14 +121,14 @@ function StatCard({ title, value, description, icon, color }: StatCardProps) {
   }
 
   return (
-    <Card className="bg-gray-800 border-gray-700">
+    <Card className="bg-teal-700 border-teal-600">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-medium text-gray-400">{title}</h3>
+          <h3 className="text-sm font-medium text-teal-100">{title}</h3>
           <div className={`p-2 rounded-md ${colorClasses[color]}`}>{icon}</div>
         </div>
         <div className="text-2xl font-bold">{value}</div>
-        <p className="text-xs text-gray-500 mt-1">{description}</p>
+        <p className="text-xs text-teal-200 mt-1">{description}</p>
       </CardContent>
     </Card>
   )

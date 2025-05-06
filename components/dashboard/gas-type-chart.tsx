@@ -35,10 +35,10 @@ export function GasTypeChart({ className }: GasTypeChartProps) {
   }))
 
   return (
-    <Card className={`bg-gray-800 border-gray-700 ${className}`}>
+    <Card className={`bg-teal-700 border-teal-600 ${className}`}>
       <CardHeader>
-        <CardTitle className="text-lg font-medium">Gas Types and Prices</CardTitle>
-        <CardDescription className="text-gray-400">Price per liter for each gas type</CardDescription>
+        <CardTitle className="text-lg font-medium text-white">Gas Types and Prices</CardTitle>
+        <CardDescription className="text-teal-200">Price per liter for each gas type</CardDescription>
       </CardHeader>
       <CardContent className="pl-2">
         {isLoading ? (
@@ -49,26 +49,26 @@ export function GasTypeChart({ className }: GasTypeChartProps) {
           <div className="h-[250px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                <XAxis dataKey="name" stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} />
+                <XAxis dataKey="name" stroke="#5eead4" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis
-                  stroke="#6b7280"
+                  stroke="#5eead4"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
-                  tickFormatter={(value) => `$${value}`}
+                  tickFormatter={(value) => `RWF${value}`}
                 />
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#0f766e" vertical={false} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "#1f2937",
-                    border: "1px solid #374151",
+                    backgroundColor: "#115e59",
+                    border: "1px solid #0f766e",
                     borderRadius: "0.375rem",
-                    color: "#f9fafb",
+                    color: "#f0fdfa",
                   }}
                   formatter={(value) => [`$${value}`, "Price per Liter"]}
-                  labelStyle={{ color: "#d1d5db" }}
+                  labelStyle={{ color: "#99f6e4" }}
                 />
-                <Bar dataKey="price" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={40} />
+                <Bar dataKey="price" fill="#0ea5e9" radius={[4, 4, 0, 0]} barSize={40} />
               </BarChart>
             </ResponsiveContainer>
           </div>

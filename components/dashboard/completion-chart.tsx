@@ -19,16 +19,16 @@ export function CompletionChart() {
   const [period, setPeriod] = useState("week")
 
   return (
-    <Card className="bg-gray-800 border-gray-700">
+    <Card className="bg-teal-700 border-teal-600">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-lg font-medium">Completed Tasks</CardTitle>
-            <p className="text-sm text-gray-400 mt-1">+15% from last week</p>
+            <CardTitle className="text-lg font-medium text-white">Completed Tasks</CardTitle>
+            <p className="text-sm text-teal-200 mt-1">+15% from last week</p>
           </div>
           <Badge
             variant="outline"
-            className="text-xs bg-gray-700 text-gray-300 border-gray-600 cursor-pointer"
+            className="text-xs bg-teal-600 text-teal-100 border-teal-500 cursor-pointer"
             onClick={() => setPeriod(period === "week" ? "month" : "week")}
           >
             {period === "week" ? "Week" : "Month"}
@@ -39,9 +39,9 @@ export function CompletionChart() {
         <div className="h-[180px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
-              <XAxis dataKey="day" stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} />
+              <XAxis dataKey="day" stroke="#5eead4" fontSize={12} tickLine={false} axisLine={false} />
               <YAxis
-                stroke="#6b7280"
+                stroke="#5eead4"
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
@@ -49,22 +49,22 @@ export function CompletionChart() {
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "#1f2937",
-                  border: "1px solid #374151",
+                  backgroundColor: "#115e59",
+                  border: "1px solid #0f766e",
                   borderRadius: "0.375rem",
-                  color: "#f9fafb",
+                  color: "#f0fdfa",
                 }}
-                itemStyle={{ color: "#93c5fd" }}
+                itemStyle={{ color: "#5eead4" }}
                 formatter={(value) => [`${value} tasks`, "Completed"]}
-                labelStyle={{ color: "#d1d5db" }}
+                labelStyle={{ color: "#99f6e4" }}
               />
               <Line
                 type="monotone"
                 dataKey="tasks"
-                stroke="#3b82f6"
+                stroke="#0ea5e9"
                 strokeWidth={2}
-                dot={{ r: 4, fill: "#3b82f6", strokeWidth: 0 }}
-                activeDot={{ r: 6, fill: "#3b82f6", stroke: "#1f2937", strokeWidth: 2 }}
+                dot={{ r: 4, fill: "#0ea5e9", strokeWidth: 0 }}
+                activeDot={{ r: 6, fill: "#0ea5e9", stroke: "#115e59", strokeWidth: 2 }}
               />
             </LineChart>
           </ResponsiveContainer>

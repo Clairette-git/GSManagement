@@ -2,8 +2,21 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("rounded-lg border bg-card text-card-foreground shadow-sm", className)} {...props} />
+const Card = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & {
+    teal?: boolean // Added teal prop
+  }
+>(({ className, teal = false, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      "rounded-lg border shadow-sm",
+      teal ? "bg-teal-700 border-teal-600 text-white" : "bg-card text-card-foreground", // Apply teal styling if teal prop is true
+      className,
+    )}
+    {...props}
+  />
 ))
 Card.displayName = "Card"
 
@@ -40,5 +53,4 @@ const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
 )
 CardFooter.displayName = "CardFooter"
 
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
-
+export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }

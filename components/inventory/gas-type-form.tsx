@@ -107,7 +107,7 @@ export default function GasTypeForm({ gasTypeId }: GasTypeFormProps) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="price" className="text-gray-300">
-              Price per Liter ($)
+              Price per Liter (RWF)
             </Label>
             <Input
               id="price"

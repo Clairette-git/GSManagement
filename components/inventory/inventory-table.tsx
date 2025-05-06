@@ -153,7 +153,7 @@ export default function InventoryTable() {
                   </TableCell>
                   <TableCell className="py-4 px-6 text-sm font-medium text-gray-900">{gasType.name}</TableCell>
                   <TableCell className="py-4 px-6 text-sm text-blue-600 font-medium">
-                    ${Number(gasType.price_per_liter).toFixed(2)}
+                    RWF{Number(gasType.price_per_liter).toFixed(2)}
                   </TableCell>
                   <TableCell className="py-4 px-6 text-right">
                     <div className="flex justify-end gap-2">

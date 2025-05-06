@@ -5,7 +5,7 @@ import type { Supply } from "@/types"
 import { useEffect, useState } from "react"
 import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
-import { Eye, ArrowRight } from "lucide-react"
+import { Eye, ArrowRight } from 'lucide-react'
 import Link from "next/link"
 
 interface RecentSuppliesProps {
@@ -33,7 +33,7 @@ export default function RecentSupplies({ className }: RecentSuppliesProps) {
   }, [])
 
   return (
-    <Card className={`bg-gray-800 border-gray-700 ${className}`}>
+    <Card className={className}>
       <CardHeader>
         <CardTitle className="text-lg font-medium">Recent Supplies</CardTitle>
         <CardDescription className="text-gray-400">Latest gas deliveries to hospitals</CardDescription>
@@ -66,8 +66,8 @@ export default function RecentSupplies({ className }: RecentSuppliesProps) {
                 <div>
                   <h3 className="font-medium">{supply.hospital_name}</h3>
                   <p className="text-sm text-gray-400">
-                    {format(new Date(supply.date), "PPP")} • RWF{Number(supply.total_price).toFixed(2)}
-                  </p>
+    {format(new Date(supply.date), "PPP")} • RWF{Number(supply.total_price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+  </p>
                 </div>
                 <Link href={`/supplies/${supply.id}`}>
                   <Button variant="outline" size="sm" className="border-gray-600 bg-gray-700 hover:bg-gray-600">

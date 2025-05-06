@@ -41,4 +41,3 @@ export const db = {
     return rows as any[]
   },
 }
-
