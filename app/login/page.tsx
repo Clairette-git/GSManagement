@@ -140,9 +140,10 @@ export default function LoginPage() {
             <Image
               src="/Cylinders.jpg"
               alt="Gas Cylinders"
-              fill
-              style={{ objectFit: "cover" }}
-              className="mix-blend-overlay"
+              width={180}
+              height={45}
+              priority
+              className="mb-8"
             />
           </div>
         </div>
@@ -199,7 +200,7 @@ export default function LoginPage() {
                   <input
                     type="email"
                     id="email"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-gray-900"
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => {
@@ -221,7 +222,7 @@ export default function LoginPage() {
                   <input
                     type={showPassword ? "text" : "password"}
                     id="password"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-gray-900"
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => {
@@ -296,7 +297,7 @@ export default function LoginPage() {
                   <input
                     type="text"
                     id="first-name"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-gray-900"
                     placeholder="John"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
@@ -310,7 +311,7 @@ export default function LoginPage() {
                   <input
                     type="text"
                     id="last-name"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-gray-900"
                     placeholder="Doe"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
@@ -327,7 +328,7 @@ export default function LoginPage() {
                   <input
                     type="email"
                     id="signup-email"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-gray-900"
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => {
@@ -350,7 +351,7 @@ export default function LoginPage() {
                   <input
                     type={showPassword ? "text" : "password"}
                     id="signup-password"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-gray-900"
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => {
@@ -376,7 +377,7 @@ export default function LoginPage() {
                 </label>
                 <select
                   id="role"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-gray-900"
                   value={role}
                   onChange={(e) => setRole(e.target.value as "admin" | "storekeeper" | "technician")}
                   required
@@ -402,7 +403,7 @@ export default function LoginPage() {
                 )}
               </button>
 
-              <div className="mt-6">
+              {/* <div className="mt-6">
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-gray-300"></div>
@@ -428,7 +429,7 @@ export default function LoginPage() {
                     <span className="ml-2">Facebook</span>
                   </button>
                 </div>
-              </div>
+              </div> */}
 
               <p className="mt-6 text-center text-sm text-gray-600">
                 Already have an account?{" "}

@@ -110,4 +110,18 @@ body {
   .dark-theme-badge {
     @apply bg-teal-600/50 text-white border-teal-500;
   }
+
+  input, select, textarea {
+    color: #111827 !important; /* Force dark text color */
+  }
+  
+  option {
+    background-color: white;
+    color: #111827;
+  }
+  
+  ::placeholder {
+    color: #6B7280 !important; /* Medium gray for placeholders */
+    opacity: 1;
+  }
 }
