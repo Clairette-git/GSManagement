@@ -138,10 +138,10 @@ export default function LoginPage() {
         <div className="absolute inset-0 opacity-20 z-0">
           <div className="relative w-full h-full">
             <Image
-              src="/Cylinders.jpg"
+              src="public/Cylinders.jpg"
               alt="Gas Cylinders"
-              width={180}
-              height={45}
+              width={200}
+              height={50}
               priority
               className="mb-8"
             />
@@ -149,7 +149,7 @@ export default function LoginPage() {
         </div>
 
         <div className="relative z-10">
-          <Image src="/DPMMK.png" alt="Kalisimbi Ltd Logo" width={180} height={45} className="mb-8" />
+          <Image src="/DPMMK.png" alt="Kalisimbi Ltd Logo" width={180} height={45} priority className="mb-8" />
         </div>
 
         <div className="relative z-10 space-y-6">
