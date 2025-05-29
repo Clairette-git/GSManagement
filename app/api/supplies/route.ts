@@ -38,6 +38,7 @@ export async function POST(request: Request) {
       recipient_signature,
       deliverer_signature,
       total_price,
+      kilometers,
       supply_details,
       create_invoice,
       invoice_status,
@@ -65,12 +66,12 @@ export async function POST(request: Request) {
     await db.query("START TRANSACTION")
 
     try {
-      // Insert supply
+      // Insert supply with kilometers field
       const [supplyResult] = await db.query(
         `INSERT INTO supplies 
         (date, hospital_name, vehicle_plate, driver_name, storekeeper_name, 
-        technician_name, recipient_name, recipient_signature, deliverer_signature, total_price) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        technician_name, recipient_name, recipient_signature, deliverer_signature, total_price, kilometers) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           date,
           hospital_name,
@@ -82,6 +83,7 @@ export async function POST(request: Request) {
           recipient_signature || null,
           deliverer_signature || null,
           total_price,
+          kilometers || 0,
         ],
       )
 

@@ -2,11 +2,24 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
 // Paths that don't require authentication
-const publicPaths = ["/login", "/api/auth/login", "/api/auth/register", "/api/test-auth", "/simple-login"]
+const publicPaths = ["/login", "/api/auth/login", "/api/auth/register", "/api/test-auth", "/simple-login", "/api/reports/test",
+  "/api/reports/cylinders"]
+
+// Function to check if a path is for a static asset
+function isStaticAsset(pathname: string) {
+  // Check for common image extensions
+  return pathname.match(/\.(jpg|jpeg|png|gif|svg|ico|webp)$/i) !== null
+}
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   console.log("Middleware checking path:", pathname)
+
+  // Allow static assets without authentication
+  if (isStaticAsset(pathname)) {
+    console.log("Static asset, skipping auth check:", pathname)
+    return NextResponse.next()
+  }
 
   // Check if the path is public
   if (publicPaths.some((path) => pathname.startsWith(path))) {
@@ -40,6 +53,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public folder
      */
-    "/((?!_next/static|_next/image|favicon.ico|public).*)",
+    "/((?!_next/static|_next/image|favicon.ico).*)",
   ],
 }

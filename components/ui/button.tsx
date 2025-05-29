@@ -1,3 +1,4 @@
+// components/ui/button.tsx
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -9,15 +10,15 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+        default: "bg-blue-600 text-white hover:bg-blue-700",
+        destructive: "bg-red-600 text-white hover:bg-red-700",
+        outline: "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900", // Fixed hover text color
+        secondary: "bg-gray-200 text-gray-900 hover:bg-gray-300",
+        ghost: "hover:bg-gray-100 text-gray-700 hover:text-gray-900",
+        link: "text-blue-600 underline-offset-4 hover:underline",
         gradient:
           "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0",
-        teal: "bg-teal-600 hover:bg-teal-700 text-white border-0", // Added teal variant
+        teal: "bg-teal-600 text-white hover:bg-teal-700 border-0",
       },
       size: {
         default: "h-10 px-4 py-2",

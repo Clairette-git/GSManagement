@@ -8,5 +8,5 @@ export default function SuppliesLayout({
 }: {
   children: React.ReactNode
 }) {
-  return <RoleAccessControl>{children}</RoleAccessControl>
+  return <RoleAccessControl allowedRoles={["admin", "storekeeper", "technician"]}>{children}</RoleAccessControl>
 }

@@ -73,27 +73,27 @@ export default function GasTypeForm({ gasTypeId }: GasTypeFormProps) {
 
   return (
     <form onSubmit={handleSubmit}>
-      <Card className="bg-gray-800 border-gray-700 max-w-2xl mx-auto">
+      <Card className="bg-teal-500 border-gray-700 max-w-2xl mx-auto ">
         <CardHeader>
           <div className="flex items-center gap-2 mb-2">
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-gray-400 hover:text-white"
+              className="h-8 w-8  hover:text-white"
               onClick={() => router.push("/inventory")}
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <CardTitle className="text-xl font-semibold">{isEditing ? "Edit Gas Type" : "Add Gas Type"}</CardTitle>
           </div>
-          <CardDescription className="text-gray-400">
+          <CardDescription className="text-tael-400">
             {isEditing ? "Update the gas type details" : "Add a new gas type to the system"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="name" className="text-gray-300">
+            <Label htmlFor="name" className="text-tael-400">
               Gas Type Name
             </Label>
             <Input
@@ -102,11 +102,11 @@ export default function GasTypeForm({ gasTypeId }: GasTypeFormProps) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              className="bg-gray-900 border-gray-700 focus:border-blue-500"
+              className=" focus:border-teal-500"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="price" className="text-gray-300">
+            <Label htmlFor="price" className="text-tael-400">
               Price per Liter (RWF)
             </Label>
             <Input
@@ -118,7 +118,7 @@ export default function GasTypeForm({ gasTypeId }: GasTypeFormProps) {
               value={pricePerLiter}
               onChange={(e) => setPricePerLiter(e.target.value)}
               required
-              className="bg-gray-900 border-gray-700 focus:border-blue-500"
+              className=" focus:border-teal-400"
             />
           </div>
         </CardContent>
@@ -134,7 +134,7 @@ export default function GasTypeForm({ gasTypeId }: GasTypeFormProps) {
           <Button
             type="submit"
             disabled={isLoading}
-            className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 border-0"
+            className="bg-gradient-to-r from-teal-700 to-teal-500 hover:from-teal-700 hover:to-teal-800 border-0"
           >
             {isLoading ? (
               <span className="flex items-center gap-1">

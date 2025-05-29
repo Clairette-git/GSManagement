@@ -11,7 +11,7 @@ interface OptimizeWorkflowProps {
 
 export function OptimizeWorkflow({ className }: OptimizeWorkflowProps) {
   return (
-    <Card className="bg-teal-700 border-teal-600">
+    <Card className="bg-teal-600 border-teal-600">
       <CardContent className="p-6">
         <div className="flex items-center gap-2 mb-4">
           <Zap className="h-5 w-5 text-green-400" />

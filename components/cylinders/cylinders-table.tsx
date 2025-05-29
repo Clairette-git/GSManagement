@@ -3,7 +3,20 @@
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import type { Cylinder, GasType } from "@/types"
-import { Edit, Trash2, Search, Filter, Plus, Download, Upload, ArrowLeft, RefreshCw, CheckCircle } from "lucide-react"
+import {
+  Edit,
+  Trash2,
+  Search,
+  Filter,
+  Plus,
+  Download,
+  Upload,
+  ArrowLeft,
+  RefreshCw,
+  CheckCircle,
+  Truck,
+  ClipboardList,
+} from "lucide-react"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
@@ -22,33 +35,58 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { CylinderIcon } from "lucide-react"
+import { format } from "date-fns"
+import { useCurrentUser } from "@/components/auth/role-access-control"
 
 export default function CylindersTable() {
-  const [cylinders, setCylinders] = useState<Cylinder[]>([])
+  const [cylinders, setCylinders] = useState<Cylinder[]>([]) // Initialize as empty array
   const [gasTypes, setGasTypes] = useState<GasType[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [sizeFilter, setSizeFilter] = useState<string>("all")
   const [searchQuery, setSearchQuery] = useState<string>("")
   const router = useRouter()
+  const { user } = useCurrentUser()
+
+  const fetchData = async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
+
+      const [cylindersRes, gasTypesRes] = await Promise.all([fetch("/api/cylinders"), fetch("/api/gas-types")])
+
+      if (!cylindersRes.ok) {
+        throw new Error(`Failed to fetch cylinders: ${cylindersRes.status}`)
+      }
+
+      if (!gasTypesRes.ok) {
+        throw new Error(`Failed to fetch gas types: ${gasTypesRes.status}`)
+      }
+
+      const [cylindersData, gasTypesData] = await Promise.all([cylindersRes.json(), gasTypesRes.json()])
+
+      setCylinders(cylindersData.data || []) // Ensure we set an empty array if data is null/undefined
+      setGasTypes(gasTypesData.data || [])
+    } catch (error) {
+      console.error("Error fetching data:", error)
+      setError(error instanceof Error ? error.message : "An unknown error occurred")
+      // Set empty arrays to prevent undefined errors
+      setCylinders([])
+      setGasTypes([])
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [cylindersRes, gasTypesRes] = await Promise.all([fetch("/api/cylinders"), fetch("/api/gas-types")])
-
-        const [cylindersData, gasTypesData] = await Promise.all([cylindersRes.json(), gasTypesRes.json()])
-
-        setCylinders(cylindersData.data)
-        setGasTypes(gasTypesData.data)
-        setIsLoading(false)
-      } catch (error) {
-        console.error("Error fetching data:", error)
-        setIsLoading(false)
-      }
-    }
-
     fetchData()
+
+    // Set up refresh interval (every 30 seconds)
+    const intervalId = setInterval(fetchData, 30000)
+
+    // Clean up interval on component unmount
+    return () => clearInterval(intervalId)
   }, [])
 
   const handleDelete = async (id: number) => {
@@ -61,9 +99,11 @@ export default function CylindersTable() {
         setCylinders(cylinders.filter((cylinder) => cylinder.id !== id))
       } else {
         console.error("Failed to delete cylinder")
+        setError("Failed to delete cylinder")
       }
     } catch (error) {
       console.error("Error deleting cylinder:", error)
+      setError(error instanceof Error ? error.message : "An unknown error occurred")
     }
   }
 
@@ -92,9 +132,47 @@ export default function CylindersTable() {
         )
       } else {
         console.error("Failed to mark cylinder as returned")
+        setError("Failed to mark cylinder as returned")
       }
     } catch (error) {
       console.error("Error marking cylinder as returned:", error)
+      setError(error instanceof Error ? error.message : "An unknown error occurred")
+    }
+  }
+
+  // Add this new function to handle marking a cylinder as filled
+  const handleMarkAsFilled = async (id: number) => {
+    try {
+      setIsLoading(true)
+      const cylinder = cylinders.find((c) => c.id === id)
+      if (!cylinder) return
+
+      const now = new Date().toISOString()
+
+      const response = await fetch(`/api/cylinders/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...cylinder,
+          status: "filled",
+          filling_end_time: now,
+        }),
+      })
+
+      if (response.ok) {
+        // Refresh the data to show the updated filling end time
+        await fetchData()
+      } else {
+        console.error("Failed to mark cylinder as filled")
+        setError("Failed to mark cylinder as filled")
+      }
+    } catch (error) {
+      console.error("Error marking cylinder as filled:", error)
+      setError(error instanceof Error ? error.message : "An unknown error occurred")
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -104,13 +182,23 @@ export default function CylindersTable() {
     return gasType ? gasType.name : "Unknown"
   }
 
-  const filteredCylinders = cylinders.filter((cylinder) => {
-    const matchesStatus = statusFilter === "all" || cylinder.status === statusFilter
-    const matchesSize = sizeFilter === "all" || cylinder.size === sizeFilter
-    const matchesSearch = searchQuery === "" || cylinder.code.toLowerCase().includes(searchQuery.toLowerCase())
+  // Count filled cylinders that haven't been assigned
+  const filledCylindersCount =
+    cylinders?.filter((cylinder) => cylinder.status === "filled" && cylinder.is_active !== false).length || 0
 
-    return matchesStatus && matchesSize && matchesSearch
-  })
+  // Count cylinders with "to be delivered" status
+  const toBeDeliveredCount =
+    cylinders?.filter((cylinder) => cylinder.status === "to be delivered" && cylinder.is_active !== false).length || 0
+
+  // Ensure cylinders is an array before filtering
+  const filteredCylinders =
+    cylinders?.filter((cylinder) => {
+      const matchesStatus = statusFilter === "all" || cylinder.status === statusFilter
+      const matchesSize = sizeFilter === "all" || cylinder.size === sizeFilter
+      const matchesSearch = searchQuery === "" || cylinder.code.toLowerCase().includes(searchQuery.toLowerCase())
+
+      return matchesStatus && matchesSize && matchesSearch
+    }) || []
 
   const getStatusBadge = (status: string, isActive: boolean) => {
     if (!isActive) {
@@ -128,6 +216,8 @@ export default function CylindersTable() {
         return <Badge className="bg-purple-100 text-purple-800 border-purple-200">Filling</Badge>
       case "filled":
         return <Badge className="bg-indigo-100 text-indigo-800 border-indigo-200">Filled</Badge>
+      case "to be delivered":
+        return <Badge className="bg-teal-100 text-teal-800 border-teal-200">To be Delivered</Badge>
       case "empty":
         return <Badge className="bg-red-100 text-red-800 border-red-200">Empty</Badge>
       default:
@@ -135,10 +225,11 @@ export default function CylindersTable() {
     }
   }
 
+  // Updated to show specific date and time
   const formatDateTime = (dateTimeString?: string | null) => {
     if (!dateTimeString) return "N/A"
     const date = new Date(dateTimeString)
-    return date.toLocaleString()
+    return format(date, "MMM d, yyyy 'at' h:mm:ss a")
   }
 
   return (
@@ -160,8 +251,36 @@ export default function CylindersTable() {
             <p className="text-gray-500 mt-1">Manage gas cylinders and their status</p>
           </div>
           <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-10 px-3 text-teal-600 border-gray-300 hover:bg-teal-50"
+              onClick={fetchData}
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+
+           {toBeDeliveredCount > 0 && (user?.role === "admin" || user?.role === "storekeeper") && (
+              <Link href="/cylinders/assigned">
+                <Button className="bg-teal-600 hover:bg-teal-700 text-white h-10 px-4 rounded-lg flex items-center gap-2">
+                  <ClipboardList className="h-4 w-4" />
+                  <span>View Assigned ({toBeDeliveredCount})</span>
+                </Button>
+              </Link>
+            )}
+
+            {filledCylindersCount > 0 && (
+              <Link href="/cylinders/assign">
+                <Button className="bg-teal-600 hover:bg-teal-700 text-white h-10 px-4 rounded-lg flex items-center gap-2">
+                  <Truck className="h-4 w-4" />
+                  <span>Assign to Vehicle ({filledCylindersCount})</span>
+                </Button>
+              </Link>
+            )}
+
             <Link href="/cylinders/add">
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white h-10 px-4 rounded-lg flex items-center gap-2">
+              <Button className="bg-teal-600 hover:bg-teal-700 text-white h-10 px-4 rounded-lg flex items-center gap-2">
                 <Plus className="h-4 w-4" />
                 <span>Add Cylinder</span>
               </Button>
@@ -170,7 +289,7 @@ export default function CylindersTable() {
         </div>
       </div>
 
-      <div className="p-4 border-b border-gray-200 bg-gray-50">
+      <div className="p-4 border-b border-gray-200 bg-teal-600">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
@@ -195,6 +314,7 @@ export default function CylindersTable() {
                 <SelectItem value="returned">Returned</SelectItem>
                 <SelectItem value="filling">Filling</SelectItem>
                 <SelectItem value="filled">Filled</SelectItem>
+                <SelectItem value="to be delivered">To be Delivered</SelectItem>
                 <SelectItem value="empty">Empty</SelectItem>
               </SelectContent>
             </Select>
@@ -216,6 +336,14 @@ export default function CylindersTable() {
         </div>
       </div>
 
+      {error && (
+        <div className="p-4 bg-red-50 border-b border-red-200">
+          <div className="flex items-center gap-2 text-red-700">
+            <span className="font-medium">Error:</span> {error}
+          </div>
+        </div>
+      )}
+
       <div className="overflow-x-auto">
         {isLoading ? (
           <div className="p-8 flex justify-center">
@@ -236,26 +364,26 @@ export default function CylindersTable() {
         ) : (
           <Table>
             <TableHeader>
-              <TableRow className="bg-gray-50 border-b border-gray-200">
-                <TableHead className="py-4 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <TableRow className="bg-teal-600 border-b border-gray-200 text-white">
+                <TableHead className="py-4 px-6 text-left text-xs font-medium text-white uppercase tracking-wider">
                   Code
                 </TableHead>
-                <TableHead className="py-4 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <TableHead className="py-4 px-6 text-left text-xs font-medium text-white uppercase tracking-wider">
                   Size
                 </TableHead>
-                <TableHead className="py-4 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <TableHead className="py-4 px-6 text-left text-xs font-medium text-white uppercase tracking-wider">
                   Gas Type
                 </TableHead>
-                <TableHead className="py-4 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <TableHead className="py-4 px-6 text-left text-xs font-medium text-white uppercase tracking-wider">
                   Status
                 </TableHead>
-                <TableHead className="py-4 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <TableHead className="py-4 px-6 text-left text-xs font-medium text-white uppercase tracking-wider">
                   Filling Start
                 </TableHead>
-                <TableHead className="py-4 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <TableHead className="py-4 px-6 text-left text-xs font-medium text-white uppercase tracking-wider">
                   Filling End
                 </TableHead>
-                <TableHead className="py-4 px-6 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <TableHead className="py-4 px-6 text-center text-xs font-medium text-white uppercase tracking-wider">
                   Actions
                 </TableHead>
               </TableRow>
@@ -298,7 +426,19 @@ export default function CylindersTable() {
                         </Button>
                       )}
 
-                      {cylinder.status === "filling" && !cylinder.filling_end_time && (
+                      {cylinder.status === "filling" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 px-3 text-indigo-600 border-gray-300 hover:bg-indigo-50 hover:text-indigo-700"
+                          onClick={() => handleMarkAsFilled(cylinder.id)}
+                        >
+                          <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                          Mark Filled
+                        </Button>
+                      )}
+
+                      {cylinder.status === "filling" && (
                         <Button
                           variant="outline"
                           size="sm"
@@ -362,14 +502,7 @@ export default function CylindersTable() {
       <div className="p-4 border-t border-gray-200 bg-gray-50 flex items-center justify-between">
         <div className="text-sm text-gray-500">Showing {filteredCylinders.length} cylinders</div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="h-8 px-3 text-gray-700 border-gray-300">
-            <Download className="h-3.5 w-3.5 mr-1" />
-            Export
-          </Button>
-          <Button variant="outline" size="sm" className="h-8 px-3 text-gray-700 border-gray-300">
-            <Upload className="h-3.5 w-3.5 mr-1" />
-            Import
-          </Button>
+        
         </div>
       </div>
     </div>

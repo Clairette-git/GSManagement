@@ -1,30 +1,17 @@
-import type { Metadata } from "next"
-import { Button } from "@/components/ui/button"
-import { PlusCircle } from "lucide-react"
-import Link from "next/link"
-import CylindersTable from "@/components/cylinders/cylinders-table"
+"use client"
 
-export const metadata: Metadata = {
-  title: "Cylinders | Gas Management System",
-  description: "Manage gas cylinders",
-}
+import RoleAccessControl from "@/components/auth/role-access-control"
+import CylindersTable from "@/components/cylinders/cylinders-table"
 
 export default function CylindersPage() {
   return (
-    <div className="space-y-6">
-      {/* <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Cylinders</h2>
-          <p className="text-gray-400 mt-1">Manage your gas cylinders inventory</p>
+    <RoleAccessControl allowedRoles={["admin", "storekeeper", "filler"]}>
+      <div className="space-y-6 p-6">
+        <div className="flex justify-between items-center">
+          
         </div>
-        <Link href="/cylinders/add">
-          <Button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 border-0">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add Cylinder
-          </Button>
-        </Link>
-      </div> */}
-      <CylindersTable />
-    </div>
+        <CylindersTable />
+      </div>
+    </RoleAccessControl>
   )
 }

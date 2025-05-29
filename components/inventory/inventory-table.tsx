@@ -208,7 +208,7 @@ export default function InventoryTable() {
 
       <div className="p-4 border-t border-gray-200 bg-gray-50 flex items-center justify-between">
         <div className="text-sm text-gray-500">Showing {filteredGasTypes.length} gas types</div>
-        <div className="flex items-center gap-2">
+        {/* <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" className="h-8 px-3 text-gray-700 border-gray-300">
             <Download className="h-3.5 w-3.5 mr-1" />
             Export
@@ -217,7 +217,7 @@ export default function InventoryTable() {
             <Upload className="h-3.5 w-3.5 mr-1" />
             Import
           </Button>
-        </div>
+        </div> */}
       </div>
     </div>
   )

@@ -59,7 +59,5 @@ export default async function CreateInvoicePage({ params }: { params: { id: stri
   } catch (error) {
     redirect("/supplies")
   }
-
-  // This will never be rendered as we always redirect
   return null
 }

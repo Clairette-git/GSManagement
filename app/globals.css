@@ -33,12 +33,13 @@
   --ring: 198 93% 60%; /* Blue that works well with teal */
   --radius: 0.5rem;
 
-  /* Chart colors */
-  --chart-1: 198 93% 60%; /* Blue that works well with teal */
+ /* Chart colors */
+  --chart-1: 199 89% 48%;
   --chart-2: 262 83% 58%;
   --chart-3: 142 71% 45%;
   --chart-4: 31 95% 44%;
   --chart-5: 0 84% 60%;
+
 
   /* Sidebar colors - teal theme */
   --sidebar-background: 168 80% 23%;
@@ -55,6 +56,7 @@ body {
   color: rgb(var(--foreground-rgb));
   background: linear-gradient(to bottom, transparent, rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
 }
+
 
 @layer utilities {
   .text-balance {

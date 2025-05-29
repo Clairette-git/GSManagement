@@ -18,11 +18,11 @@ interface CylinderFormProps {
 
 export default function CylinderForm({ cylinderId }: CylinderFormProps) {
   const [code, setCode] = useState("")
-  const [size, setSize] = useState<"10L" | "40L" | "50L">("10L")
+  const [size, setSize] = useState<"5L" | "10L" | "40L" | "47L" | "50L">("10L")
   const [gasTypeId, setGasTypeId] = useState<string>("")
-  const [status, setStatus] = useState<"in stock" | "delivered" | "returned" | "filling" | "filled" | "empty">(
-    "in stock",
-  )
+  const [status, setStatus] = useState<
+    "in stock" | "delivered" | "returned" | "filling" | "filled" | "empty" | "to be delivered"
+  >("in stock")
   const [gasTypes, setGasTypes] = useState<GasType[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
@@ -107,10 +107,42 @@ export default function CylinderForm({ cylinderId }: CylinderFormProps) {
     }
   }
 
+  const handleStatusChange = (value: string) => {
+    const newStatus = value as
+      | "in stock"
+      | "delivered"
+      | "returned"
+      | "filling"
+      | "filled"
+      | "empty"
+      | "to be delivered"
+    setStatus(newStatus)
+
+    // Automatically set filling end time when status changes to "filled"
+    if (newStatus === "filled" && !fillingEndTime) {
+      const now = new Date().toISOString()
+      setFillingEndTime(now)
+    }
+
+    // Automatically set filling start time when status changes to "filling"
+    if (newStatus === "filling") {
+      // If status is changed to "filling", clear the filling end time
+      setFillingEndTime("")
+
+      // Set start time if it's not already set
+      if (!fillingStartTime) {
+        const now = new Date().toISOString()
+        setFillingStartTime(now)
+      }
+    }
+  }
+
   const handleStartFilling = () => {
     const now = new Date().toISOString()
     setFillingStartTime(now)
     setStatus("filling")
+    // Clear filling end time when starting filling
+    setFillingEndTime("")
   }
 
   const handleEndFilling = () => {
@@ -152,14 +184,16 @@ export default function CylinderForm({ cylinderId }: CylinderFormProps) {
             <Label htmlFor="size" className="text-gray-700">
               Cylinder Size
             </Label>
-            <Select value={size} onValueChange={(value) => setSize(value as "10L" | "40L" | "50L")}>
+            <Select value={size} onValueChange={(value) => setSize(value as "5L" | "10L" | "40L" |  "47L" | "50L")}>
               <SelectTrigger id="size" className="border-gray-300 text-gray-900 bg-white">
                 <SelectValue placeholder="Select size" />
               </SelectTrigger>
               <SelectContent className="bg-white text-gray-900">
+                <SelectItem value="5L">5L</SelectItem>
                 <SelectItem value="10L">10L</SelectItem>
                 <SelectItem value="40L">40L</SelectItem>
-                <SelectItem value="50L">50L</SelectItem>
+                <SelectItem value="47L">47L</SelectItem>
+                <SelectItem value="50L">50L</SelectItem> 
               </SelectContent>
             </Select>
           </div>
@@ -185,12 +219,7 @@ export default function CylinderForm({ cylinderId }: CylinderFormProps) {
             <Label htmlFor="status" className="text-gray-700">
               Status
             </Label>
-            <Select
-              value={status}
-              onValueChange={(value) =>
-                setStatus(value as "in stock" | "delivered" | "returned" | "filling" | "filled" | "empty")
-              }
-            >
+            <Select value={status} onValueChange={handleStatusChange}>
               <SelectTrigger id="status" className="border-gray-300 text-gray-900 bg-white">
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
@@ -201,6 +230,7 @@ export default function CylinderForm({ cylinderId }: CylinderFormProps) {
                 <SelectItem value="filling">Filling</SelectItem>
                 <SelectItem value="filled">Filled</SelectItem>
                 <SelectItem value="empty">Empty</SelectItem>
+                <SelectItem value="to be delivered">To Be Delivered</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -269,7 +299,7 @@ export default function CylinderForm({ cylinderId }: CylinderFormProps) {
                     variant="outline"
                     onClick={handleEndFilling}
                     className="flex items-center gap-1 border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                    disabled={!fillingStartTime}
+                    disabled={!fillingStartTime || status === "filling"}
                   >
                     <Clock className="h-4 w-4" />
                     End Now

@@ -20,11 +20,11 @@ export function ExportInvoicesList({ invoices }: ExportInvoicesListProps) {
 
       // Add data rows
       invoices.forEach((invoice) => {
-        csvContent += `INV-${invoice.id.toString().padStart(4, "0")},`
-        csvContent += `${formatDate(invoice.date)},`
-        csvContent += `"${invoice.hospital_name}",`
-        csvContent += `$${Number(invoice.amount).toFixed(2)},`
-        csvContent += `${invoice.status}\n`
+        csvContent += `INV-${invoice.id.toString().padStart(4, "0")}",`;
+        csvContent += `${formatDate(invoice.date)}",`;
+        csvContent += `"${invoice.hospital_name.trim()}",`;
+        csvContent += `$${Number(invoice.amount).toFixed(2)}",`;
+        csvContent += `${invoice.status}"\n`;
       })
 
       // Create download link

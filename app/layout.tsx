@@ -8,7 +8,6 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "Gas Supply & Inventory Management System",
   description: "Medical gas supply and inventory management system",
-    
 }
 
 export default function RootLayout({
@@ -18,11 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={`${inter.className} bg-teal-700`}>{children}</body>
     </html>
   )
 }
-
-
-
-import './globals.css'

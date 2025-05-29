@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import type { Supply } from "@/types"
 import {
   Eye,
   FileText,
@@ -15,6 +14,7 @@ import {
   ArrowLeft,
   Loader2,
   FileSpreadsheet,
+  PenTool,
 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
@@ -23,6 +23,18 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Link from "next/link"
 import { toast } from "sonner"
+import { SignaturesModal } from "./signatures-modal"
+import { SupplyDetailsModal } from "./supply-details-modal"
+import { formatDate } from "@/lib/utils"
+
+interface Supply {
+  id: number
+  date: string
+  hospital_name: string
+  vehicle_plate: string
+  driver_name: string
+  total_price: number
+}
 
 export default function SuppliesTable() {
   const [supplies, setSupplies] = useState<Supply[]>([])
@@ -30,6 +42,9 @@ export default function SuppliesTable() {
   const [searchQuery, setSearchQuery] = useState<string>("")
   const [dateFilter, setDateFilter] = useState<string>("all")
   const [processingInvoice, setProcessingInvoice] = useState<number | null>(null)
+  const [selectedSupplyId, setSelectedSupplyId] = useState<number | null>(null)
+  const [showSignaturesModal, setShowSignaturesModal] = useState(false)
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -112,6 +127,16 @@ export default function SuppliesTable() {
     toast.success("Export completed successfully")
   }
 
+  const handleViewSignatures = (supplyId: number) => {
+    setSelectedSupplyId(supplyId)
+    setShowSignaturesModal(true)
+  }
+
+  const handleViewDetails = (supplyId: number) => {
+    setSelectedSupplyId(supplyId)
+    setShowDetailsModal(true)
+  }
+
   const filteredSupplies = supplies.filter((supply) => {
     const matchesSearch =
       searchQuery === "" ||
@@ -138,18 +163,16 @@ export default function SuppliesTable() {
     return matchesSearch && matchesDate
   })
 
-  const getTimeAgo = (dateString: string) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
-
-    if (diffInHours < 1) return "Just now"
-    if (diffInHours < 24) return `About ${diffInHours} hours ago`
-    if (diffInHours < 48) return "1 day ago"
-    if (diffInHours < 72) return "2 days ago"
-    if (diffInHours < 168) return "3 days ago"
-
-    return format(date, "MMM d, yyyy")
+  // Updated to show specific date and time with proper parsing
+  const formatDateTime = (dateString: string) => {
+    try {
+      // Make sure we're working with the complete ISO string
+      const date = new Date(dateString)
+      return format(date, "MMM d, yyyy 'at' h:mm a")
+    } catch (error) {
+      console.error("Error formatting date:", error)
+      return dateString // Return the original string if parsing fails
+    }
   }
 
   return (
@@ -172,7 +195,7 @@ export default function SuppliesTable() {
           </div>
           <div className="flex items-center gap-3">
             <Link href="/supplies/add">
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white h-10 px-4 rounded-lg flex items-center gap-2">
+              <Button className="bg-teal-600 hover:bg-teal-700 text-white h-10 px-4 rounded-lg flex items-center gap-2">
                 <Plus className="h-4 w-4" />
                 <span>New Supply</span>
               </Button>
@@ -181,7 +204,7 @@ export default function SuppliesTable() {
         </div>
       </div>
 
-      <div className="p-4 border-b border-gray-200 bg-gray-50">
+      <div className="p-4 border-b border-gray-200 bg-teal-600">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
@@ -234,26 +257,26 @@ export default function SuppliesTable() {
         ) : (
           <Table>
             <TableHeader>
-              <TableRow className="bg-gray-50 border-b border-gray-200">
-                <TableHead className="py-4 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <TableRow className="bg-teal-600 border-b border-gray-200">
+                <TableHead className="py-4 px-6 text-left text-xs font-medium text-gray-50 uppercase tracking-wider">
                   #
                 </TableHead>
-                <TableHead className="py-4 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <TableHead className="py-4 px-6 text-left text-xs font-medium text-gray-50 uppercase tracking-wider">
                   Hospital
                 </TableHead>
-                <TableHead className="py-4 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <TableHead className="py-4 px-6 text-left text-xs font-medium text-gray-50 uppercase tracking-wider">
                   Vehicle
                 </TableHead>
-                <TableHead className="py-4 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <TableHead className="py-4 px-6 text-left text-xs font-medium text-gray-50 uppercase tracking-wider">
                   Driver
                 </TableHead>
-                <TableHead className="py-4 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <TableHead className="py-4 px-6 text-left text-xs font-medium text-gray-50 uppercase tracking-wider">
                   Total Price
                 </TableHead>
-                <TableHead className="py-4 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Last Interaction
+                <TableHead className="py-4 px-6 text-left text-xs font-medium text-gray-50 uppercase tracking-wider">
+                  Date & Time
                 </TableHead>
-                <TableHead className="py-4 px-6 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <TableHead className="py-4 px-6 text-center text-xs font-medium text-gray-50 uppercase tracking-wider">
                   Actions
                 </TableHead>
               </TableRow>
@@ -281,18 +304,27 @@ export default function SuppliesTable() {
                   <TableCell className="py-4 px-6 text-sm font-medium text-blue-600">
                     RWF{Number(supply.total_price).toFixed(2)}
                   </TableCell>
-                  <TableCell className="py-4 px-6 text-sm text-gray-500">{getTimeAgo(supply.date)}</TableCell>
+                  <TableCell className="py-4 px-6 text-sm text-gray-500">{formatDate(supply.date)}</TableCell>
                   <TableCell className="py-4 px-6 text-right">
                     <div className="flex justify-end gap-2">
-                      {/* <Button
+                      <Button
                         variant="outline"
                         size="sm"
                         className="h-8 px-3 text-gray-700 border-gray-300 hover:bg-gray-100"
-                        onClick={() => router.push(`/supplies/${supply.id}`)}
+                        onClick={() => handleViewDetails(supply.id)}
                       >
                         <Eye className="h-3.5 w-3.5 mr-1" />
                         View
-                      </Button> */}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 px-3 text-purple-600 border-gray-300 hover:bg-purple-50 hover:text-purple-700"
+                        onClick={() => handleViewSignatures(supply.id)}
+                      >
+                        <PenTool className="h-3.5 w-3.5 mr-1" />
+                        Signatures
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
@@ -311,15 +343,6 @@ export default function SuppliesTable() {
                             Invoice
                           </>
                         )}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 px-3 text-gray-700 border-gray-300 hover:bg-gray-100"
-                        onClick={() => window.open(`/api/supplies/${supply.id}/print`, "_blank")}
-                      >
-                        <Printer className="h-3.5 w-3.5 mr-1" />
-                        Print
                       </Button>
                     </div>
                   </TableCell>
@@ -344,6 +367,16 @@ export default function SuppliesTable() {
           </Button>
         </div>
       </div>
+
+      {/* Signatures Modal */}
+      <SignaturesModal
+        supplyId={selectedSupplyId || 0}
+        open={showSignaturesModal}
+        onOpenChange={setShowSignaturesModal}
+      />
+
+      {/* Supply Details Modal */}
+      <SupplyDetailsModal supplyId={selectedSupplyId} open={showDetailsModal} onOpenChange={setShowDetailsModal} />
     </div>
   )
 }

@@ -19,6 +19,7 @@ const pool = mysql.createPool({
   queueLimit: 0,
 })
 
+
 export const db = {
   query: async (sql: string, params?: any[]) => {
     try {

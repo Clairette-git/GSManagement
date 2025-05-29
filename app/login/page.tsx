@@ -1,12 +1,16 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import Image from "next/image"
 import { CheckCircle, Eye, EyeOff, ArrowRight } from "lucide-react"
 
 export default function LoginPage() {
-  const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin")
+  const searchParams = useSearchParams()
+  const tabParam = searchParams?.get("tab")
+
+  const [activeTab, setActiveTab] = useState<"signin" | "signup">(tabParam === "signup" ? "signup" : "signin")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
@@ -20,9 +24,16 @@ export default function LoginPage() {
   // For signup form
   const [username, setUsername] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
-  const [role, setRole] = useState<"admin" | "storekeeper" | "technician">("storekeeper")
+  const [role, setRole] = useState<"admin" | "storekeeper" | "technician" | "filler">("storekeeper")
   const [isUsernameValid, setIsUsernameValid] = useState(false)
   const [isConfirmPasswordValid, setIsConfirmPasswordValid] = useState(false)
+
+  // Set active tab based on URL parameter
+  useEffect(() => {
+    if (searchParams && tabParam === "signup") {
+      setActiveTab("signup")
+    }
+  }, [searchParams, tabParam])
 
   const validateEmail = (email: string) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -117,6 +128,13 @@ export default function LoginPage() {
         setLoginError(null)
         setActiveTab("signin")
         alert("Account created successfully! Please sign in.")
+
+        // Clear form
+        setFirstName("")
+        setLastName("")
+        setEmail("")
+        setPassword("")
+        setRole("storekeeper")
       } else {
         setLoginError(data.message || "Registration failed")
       }
@@ -135,38 +153,22 @@ export default function LoginPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-gray-800 opacity-90 z-0"></div>
 
         {/* Gas cylinder images with overlay */}
-        <div className="absolute inset-0 opacity-20 z-0">
-          <div className="relative w-full h-full">
-            <Image
-              src="public/Cylinders.jpg"
-              alt="Gas Cylinders"
-              width={200}
-              height={50}
-              priority
-              className="mb-8"
-            />
-          </div>
+        <div className="absolute inset-0 opacity-60 z-0">
+          <Image src="/Cylinders.jpg" alt="Gas Cylinders" fill priority className="object-cover" />
         </div>
 
         <div className="relative z-10">
-          <Image src="/DPMMK.png" alt="Kalisimbi Ltd Logo" width={180} height={45} priority className="mb-8" />
+          <Image src="/DPMMK.png" alt="Kalisimbi Ltd Logo" width={200} height={200} priority className="mb-8" />
         </div>
 
         <div className="relative z-10 space-y-6">
           <h2 className="text-4xl font-bold leading-tight">
-            Gas Supply &Inventory
-            Management System <br />
-            <span className="relative">
-              Supply
-            </span>
+            Gas Supply &Inventory Management System <br />
+            <span className="relative">Supply</span>
           </h2>
-          <p className="text-gray-300 max-w-md">
-            Track inventory, manage deliveries, and optimize your medical gas supply chain with our comprehensive
-            management system.
-          </p>
         </div>
 
-        <div className="relative z-10 text-sm text-gray-400">© 2025 Kalisimbi Gas. All rights reserved.</div>
+        <div className="relative z-10 text-sm text-white">© 2025 Kalisimbi Gas. All rights reserved.</div>
       </div>
 
       {/* Right side - Login form */}
@@ -253,7 +255,7 @@ export default function LoginPage() {
                   </label>
                 </div>
                 <div className="text-sm">
-                  <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+                  <a href="#" className="font-medium text-teal-500 hover:text-teal-700">
                     Forgot password?
                   </a>
                 </div>
@@ -262,7 +264,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50"
+                className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-white bg-emerald-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50"
               >
                 {isLoading ? (
                   "Signing in..."
@@ -274,14 +276,12 @@ export default function LoginPage() {
                 )}
               </button>
 
-              
-
               <p className="mt-6 text-center text-sm text-gray-600">
                 Don't have an account?{" "}
                 <button
                   type="button"
                   onClick={() => setActiveTab("signup")}
-                  className="font-medium text-blue-600 hover:text-blue-500"
+                  className="font-medium text-teal-500 hover:text-teal-700"
                 >
                   Sign up
                 </button>
@@ -379,11 +379,12 @@ export default function LoginPage() {
                   id="role"
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-gray-900"
                   value={role}
-                  onChange={(e) => setRole(e.target.value as "admin" | "storekeeper" | "technician")}
+                  onChange={(e) => setRole(e.target.value as "admin" | "storekeeper" | "technician" | "filler")}
                   required
                 >
                   <option value="storekeeper">Storekeeper</option>
                   <option value="technician">Technician</option>
+                  <option value="filler">Filler</option>
                   <option value="admin">Admin</option>
                 </select>
               </div>
@@ -402,34 +403,6 @@ export default function LoginPage() {
                   </>
                 )}
               </button>
-
-              {/* <div className="mt-6">
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-300"></div>
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-white text-gray-500">Or continue with</span>
-                  </div>
-                </div>
-
-                <div className="mt-6 grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                  >
-                    <Image src="/google-icon.png" alt="Google" width={20} height={20} />
-                    <span className="ml-2">Google</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                  >
-                    <Image src="/facebook-icon.png" alt="Facebook" width={20} height={20} />
-                    <span className="ml-2">Facebook</span>
-                  </button>
-                </div>
-              </div> */}
 
               <p className="mt-6 text-center text-sm text-gray-600">
                 Already have an account?{" "}

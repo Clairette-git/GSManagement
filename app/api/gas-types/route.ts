@@ -3,7 +3,7 @@ import { db } from "@/lib/db"
 
 export async function GET() {
   try {
-    const [gasTypes] = await db.query("SELECT * FROM gas_types ORDER BY name")
+    const [gasTypes] = await db.query("SELECT * FROM gas_types ORDER BY id ASC")
 
     return NextResponse.json({
       data: gasTypes,

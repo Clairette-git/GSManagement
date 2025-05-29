@@ -1,95 +1,188 @@
 "use client"
 
 import type React from "react"
-
 import { useEffect, useState } from "react"
-import { useRouter, usePathname } from "next/navigation"
+import { useRouter } from "next/navigation"
 
-// Role-based access paths
-const roleBasedPaths = {
-  admin: ["/dashboard", "/inventory", "/cylinders", "/supplies", "/users", "/settings", "/reports", "/invoices"],
-  storekeeper: ["/dashboard", "/inventory", "/cylinders", "/supplies"],
-  technician: ["/supplies"],
+interface User {
+  id: number
+  username: string
+  email: string
+  role: "admin" | "storekeeper" | "filler" | "technician"
 }
 
-export default function RoleAccessControl({ children }: { children: React.ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
+interface RoleAccessControlProps {
+  children: React.ReactNode
+  allowedRoles?: ("admin" | "storekeeper" | "filler" | "technician")[]
+  fallbackPath?: string
+}
+
+export default function RoleAccessControl({
+  children,
+  allowedRoles = [],
+  fallbackPath = "/dashboard",
+}: RoleAccessControlProps) {
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [hasAccess, setHasAccess] = useState(false)
   const router = useRouter()
-  const pathname = usePathname()
 
   useEffect(() => {
-    // Check if user is authenticated
-    const token = localStorage.getItem("auth_token")
+    const checkUserAccess = async () => {
+      console.log("🔍 RoleAccessControl: Starting access check")
+      console.log("🔍 Allowed roles:", allowedRoles)
 
-    if (!token) {
-      console.log("No token found, redirecting to login")
-      router.push("/login")
-      return
-    }
-
-    // Verify token with the server
-    const verifyToken = async () => {
       try {
-        const response = await fetch("/api/test-auth", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+        let userData: User | null = null
 
-        const data = await response.json()
+        // First try to get user from API
+        try {
+          const response = await fetch("/api/auth/me", {
+            method: "GET",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          })
 
-        if (data.authenticated) {
-          setIsAuthenticated(true)
+          console.log("🔍 API response status:", response.status)
 
-          // Check if user has access to the current path
-          const basePath = `/${pathname.split("/")[1]}`
-
-          if (data.user.role && data.user.role !== "admin") {
-            const allowedPaths = roleBasedPaths[data.user.role as keyof typeof roleBasedPaths] || []
-
-            // Check if the user has access to this path
-            if (!allowedPaths.some((path) => basePath === path)) {
-              console.log(`User with role ${data.user.role} does not have access to ${basePath}`)
-
-              // Redirect to the first allowed path for their role
-              if (allowedPaths.length > 0) {
-                router.push(allowedPaths[0])
-              } else {
-                router.push("/login")
-              }
+          if (response.ok) {
+            const data = await response.json()
+            console.log("🔍 API response data:", data)
+            if (data && data.user) {
+              userData = data.user
+              console.log("🔍 User from API:", userData)
             }
           }
-        } else {
-          console.log("Token invalid, redirecting to login")
-          router.push("/login")
+        } catch (apiError) {
+          console.log("🔍 API call failed:", apiError)
         }
+
+        // Fallback to localStorage if API failed
+        if (!userData) {
+          const userStr = localStorage.getItem("user")
+          console.log("🔍 LocalStorage user string:", userStr)
+
+          if (userStr) {
+            try {
+              userData = JSON.parse(userStr)
+              console.log("🔍 User from localStorage:", userData)
+            } catch (parseError) {
+              console.error("🔍 Error parsing localStorage user:", parseError)
+            }
+          }
+        }
+
+        if (!userData) {
+          console.log("🔍 No user found, redirecting to login")
+          router.push("/login")
+          return
+        }
+
+        setUser(userData)
+
+        // Check role access
+        if (allowedRoles && allowedRoles.length > 0) {
+          const hasRoleAccess = allowedRoles.includes(userData.role)
+          console.log("🔍 User role:", userData.role)
+          console.log("🔍 Has role access:", hasRoleAccess)
+
+          if (!hasRoleAccess) {
+            console.log("🔍 Access denied, redirecting to:", fallbackPath)
+            router.push(fallbackPath)
+            return
+          }
+        }
+
+        console.log("🔍 Access granted!")
+        setHasAccess(true)
       } catch (error) {
-        console.error("Error verifying token:", error)
+        console.error("🔍 Error in access check:", error)
         router.push("/login")
       } finally {
-        setIsLoading(false)
+        setLoading(false)
       }
     }
 
-    verifyToken()
-  }, [router, pathname])
+    checkUserAccess()
+  }, [allowedRoles, fallbackPath, router])
 
-  if (isLoading) {
+  if (loading) {
+    console.log("🔍 RoleAccessControl: Loading...")
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="animate-pulse flex flex-col items-center">
-          <div className="h-12 w-12 bg-blue-600 rounded-full mb-4"></div>
-          <div className="h-4 w-32 bg-gray-300 rounded mb-2"></div>
-          <div className="h-3 w-24 bg-gray-300 rounded"></div>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-teal-600"></div>
       </div>
     )
   }
 
-  if (!isAuthenticated) {
-    return null // Will redirect in the useEffect
+  if (!user) {
+    console.log("🔍 RoleAccessControl: No user, returning null")
+    return null
   }
 
+  if (!hasAccess) {
+    console.log("🔍 RoleAccessControl: No access, returning null")
+    return null
+  }
+
+  console.log("🔍 RoleAccessControl: Rendering children")
   return <>{children}</>
+}
+
+// Hook to get current user
+export function useCurrentUser() {
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        let userData: User | null = null
+
+        // First try API
+        try {
+          const response = await fetch("/api/auth/me", {
+            method: "GET",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          })
+
+          if (response.ok) {
+            const data = await response.json()
+            if (data && data.user) {
+              userData = data.user
+            }
+          }
+        } catch (apiError) {
+          console.log("useCurrentUser API error:", apiError)
+        }
+
+        // Fallback to localStorage
+        if (!userData) {
+          const userStr = localStorage.getItem("user")
+          if (userStr) {
+            try {
+              userData = JSON.parse(userStr)
+            } catch (parseError) {
+              console.error("useCurrentUser parse error:", parseError)
+            }
+          }
+        }
+
+        setUser(userData)
+      } catch (error) {
+        console.error("useCurrentUser error:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchUser()
+  }, [])
+
+  return { user, loading }
 }

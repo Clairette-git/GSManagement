@@ -2,15 +2,15 @@
 
 import type React from "react"
 
-import { useState, useEffect, useRef, useMemo } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
 import type { Cylinder, GasType } from "@/types"
-import { ArrowLeft, Plus, Save, Trash2, RefreshCw, AlertCircle } from "lucide-react"
+import { ArrowLeft, Save, RefreshCw, AlertCircle, Search, Truck } from "lucide-react"
 
 export default function SupplyForm() {
   const router = useRouter()
@@ -30,6 +30,7 @@ export default function SupplyForm() {
   const [storekeeperName, setStorekeeperName] = useState("")
   const [technicianName, setTechnicianName] = useState("")
   const [recipientName, setRecipientName] = useState("")
+  const [kilometers, setKilometers] = useState<number>(0)
   const [supplyDetails, setSupplyDetails] = useState<
     Array<{
       cylinder_code: string
@@ -38,6 +39,16 @@ export default function SupplyForm() {
       price: number
     }>
   >([])
+
+  // Vehicle cylinders state
+  const [vehicleCylinders, setVehicleCylinders] = useState<any[]>([])
+  const [isLoadingVehicleCylinders, setIsLoadingVehicleCylinders] = useState(false)
+  const [selectedCylinderIds, setSelectedCylinderIds] = useState<string[]>([])
+
+  // Invoice state
+  const [createInvoice, setCreateInvoice] = useState(true)
+  const [invoiceStatus, setInvoiceStatus] = useState<"paid" | "unpaid">("unpaid")
+  const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split("T")[0])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -56,6 +67,66 @@ export default function SupplyForm() {
     fetchData()
   }, [])
 
+  // Fetch cylinders assigned to the vehicle when plate number changes
+  useEffect(() => {
+    const fetchVehicleCylinders = async () => {
+      if (!vehiclePlate.trim()) {
+        setVehicleCylinders([])
+        return
+      }
+
+      setIsLoadingVehicleCylinders(true)
+
+      try {
+        const response = await fetch(`/api/cylinders/by-vehicle?plate=${encodeURIComponent(vehiclePlate)}`)
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch cylinders: ${response.status}`)
+        }
+
+        const data = await response.json()
+        setVehicleCylinders(data.data || [])
+      } catch (error) {
+        console.error("Error fetching vehicle cylinders:", error)
+      } finally {
+        setIsLoadingVehicleCylinders(false)
+      }
+    }
+
+    fetchVehicleCylinders()
+  }, [vehiclePlate])
+
+  // Update supply details when selected cylinders change
+  useEffect(() => {
+    if (selectedCylinderIds.length > 0) {
+      // Create supply details from selected cylinders
+      const newSupplyDetails = selectedCylinderIds.map((cylinderCode) => {
+        const cylinder = vehicleCylinders.find((c) => c.code === cylinderCode)
+        const gasTypeId = cylinders.find((c) => c.code === cylinderCode)?.gas_type_id || 0
+        const gasType = gasTypes.find((g) => g.id === gasTypeId)
+
+        // Extract numeric part from size (e.g., "50L" -> 50)
+        const cylinderSize = cylinders.find((c) => c.code === cylinderCode)?.size || ""
+        const sizeNumber = Number.parseInt(cylinderSize.replace(/[^0-9]/g, "")) || 0
+
+        // Calculate price based on gas type and liters
+        const pricePerLiter = gasType ? Number(gasType.price_per_liter) : 0
+        const price = pricePerLiter * sizeNumber
+
+        return {
+          cylinder_code: cylinderCode,
+          gas_type_id: gasTypeId,
+          liters: sizeNumber,
+          price: price,
+        }
+      })
+
+      setSupplyDetails(newSupplyDetails)
+    } else {
+      setSupplyDetails([])
+    }
+  }, [selectedCylinderIds, vehicleCylinders, cylinders, gasTypes])
+
   useEffect(() => {
     // Initialize signature canvases
     const initCanvas = (canvas: HTMLCanvasElement | null) => {
@@ -72,69 +143,10 @@ export default function SupplyForm() {
     initCanvas(delivererSignatureCanvasRef.current)
   }, [])
 
-  // Track which cylinders are already selected
-  const selectedCylinderCodes = useMemo(() => {
-    return supplyDetails.map((detail) => detail.cylinder_code).filter((code) => code !== "")
-  }, [supplyDetails])
-
-  const handleAddDetail = () => {
-    setSupplyDetails([
-      ...supplyDetails,
-      {
-        cylinder_code: "",
-        gas_type_id: 0,
-        liters: 0,
-        price: 0,
-      },
-    ])
-  }
-
-  const handleRemoveDetail = (index: number) => {
-    const newDetails = [...supplyDetails]
-    newDetails.splice(index, 1)
-    setSupplyDetails(newDetails)
-  }
-
-  const handleDetailChange = (index: number, field: string, value: any) => {
-    const newDetails = [...supplyDetails]
-    newDetails[index] = { ...newDetails[index], [field]: value }
-
-    // If cylinder code changes, update gas type and automatically set liters based on cylinder size
-    if (field === "cylinder_code") {
-      const cylinder = cylinders.find((c) => c.code === value)
-      if (cylinder) {
-        // Set gas type if available
-        if (cylinder.gas_type_id) {
-          newDetails[index].gas_type_id = cylinder.gas_type_id
-        }
-
-        // Automatically set liters based on cylinder size
-        if (cylinder.size) {
-          // Extract numeric part from size (e.g., "50L" -> 50)
-          const sizeNumber = Number.parseInt(cylinder.size.replace(/[^0-9]/g, ""))
-          newDetails[index].liters = sizeNumber
-
-          // Update price based on gas type and liters
-          const gasType = gasTypes.find((g) => g.id === cylinder.gas_type_id)
-          if (gasType) {
-            const pricePerLiter = Number(gasType.price_per_liter)
-            newDetails[index].price = pricePerLiter * sizeNumber
-          }
-        }
-      }
-    }
-
-    // If gas type changes or liters change, update price
-    if (field === "gas_type_id" || field === "liters") {
-      const gasType = gasTypes.find((g) => g.id === Number(newDetails[index].gas_type_id))
-      if (gasType) {
-        const pricePerLiter = Number(gasType.price_per_liter)
-        const liters = Number(newDetails[index].liters)
-        newDetails[index].price = pricePerLiter * liters
-      }
-    }
-
-    setSupplyDetails(newDetails)
+  const handleToggleCylinder = (cylinderCode: string) => {
+    setSelectedCylinderIds((prev) =>
+      prev.includes(cylinderCode) ? prev.filter((code) => code !== cylinderCode) : [...prev, cylinderCode],
+    )
   }
 
   const calculateTotalPrice = () => {
@@ -232,7 +244,7 @@ export default function SupplyForm() {
     e.preventDefault()
 
     if (supplyDetails.length === 0) {
-      alert("Please add at least one cylinder to the supply")
+      alert("Please select at least one cylinder to the supply")
       return
     }
 
@@ -259,6 +271,8 @@ export default function SupplyForm() {
     setIsLoading(true)
 
     try {
+      const totalPrice = calculateTotalPrice()
+
       const response = await fetch("/api/supplies", {
         method: "POST",
         headers: {
@@ -274,12 +288,17 @@ export default function SupplyForm() {
           recipient_name: recipientName,
           recipient_signature: signatureDataURL,
           deliverer_signature: delivererSignatureDataURL,
-          total_price: calculateTotalPrice(),
+          total_price: totalPrice,
+          kilometers: kilometers,
           supply_details: supplyDetails,
+          create_invoice: createInvoice,
+          invoice_status: invoiceStatus,
+          invoice_date: invoiceDate || date,
         }),
       })
 
       if (response.ok) {
+        // Always redirect to supplies list, regardless of invoice creation
         router.push("/supplies")
         router.refresh()
       } else {
@@ -293,33 +312,6 @@ export default function SupplyForm() {
       setIsLoading(false)
     }
   }
-
-  // Get available cylinders that haven't been selected yet
-  const getAvailableCylinders = (currentIndex: number) => {
-    // Get all filled cylinders that are active
-    const filledCylinders = cylinders.filter(
-      (c) => c.status === "filled" && c.is_active !== false && c.filling_end_time,
-    )
-
-    // Filter out cylinders that are already selected in other rows
-    return filledCylinders.filter((cylinder) => {
-      // If this cylinder is already selected in the current row, include it
-      if (supplyDetails[currentIndex]?.cylinder_code === cylinder.code) {
-        return true
-      }
-
-      // Otherwise, exclude it if it's selected in any other row
-      return !selectedCylinderCodes.includes(cylinder.code)
-    })
-  }
-
-  // Check if we have any available cylinders left
-  const hasAvailableCylinders = useMemo(() => {
-    const filledCylinders = cylinders.filter(
-      (c) => c.status === "filled" && c.is_active !== false && c.filling_end_time,
-    )
-    return filledCylinders.length > selectedCylinderCodes.length
-  }, [cylinders, selectedCylinderCodes])
 
   return (
     <form onSubmit={handleSubmit}>
@@ -376,11 +368,40 @@ export default function SupplyForm() {
               <Label htmlFor="vehicle" className="text-gray-700">
                 Vehicle Plate
               </Label>
+              <div className="relative">
+                <Input
+                  id="vehicle"
+                  placeholder="e.g., RAB 123A"
+                  value={vehiclePlate}
+                  onChange={(e) => setVehiclePlate(e.target.value)}
+                  required
+                  className="border-gray-300 focus:border-blue-500 text-gray-900 placeholder:text-gray-400 pr-10"
+                />
+                {isLoadingVehicleCylinders && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <div className="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+                  </div>
+                )}
+                {!isLoadingVehicleCylinders && vehiclePlate && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <Search className="h-5 w-5 text-gray-400" />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="kilometers" className="text-gray-700">
+                Kilometers Traveled
+              </Label>
               <Input
-                id="vehicle"
-                placeholder="e.g., RAB 123A"
-                value={vehiclePlate}
-                onChange={(e) => setVehiclePlate(e.target.value)}
+                id="kilometers"
+                type="number"
+                min="0"
+                step="0.1"
+                placeholder="Enter kilometers traveled"
+                value={kilometers || ""}
+                onChange={(e) => setKilometers(Number(e.target.value))}
                 required
                 className="border-gray-300 focus:border-blue-500 text-gray-900 placeholder:text-gray-400"
               />
@@ -402,7 +423,7 @@ export default function SupplyForm() {
 
             <div className="space-y-2">
               <Label htmlFor="storekeeper" className="text-gray-700">
-                Storekeeper Name
+                Storekeeper Name (Production Site)
               </Label>
               <Input
                 id="storekeeper"
@@ -416,7 +437,7 @@ export default function SupplyForm() {
 
             <div className="space-y-2">
               <Label htmlFor="technician" className="text-gray-700">
-                Technician Name
+                Kalisimbi Technician Name
               </Label>
               <Input
                 id="technician"
@@ -430,7 +451,7 @@ export default function SupplyForm() {
 
             <div className="space-y-2">
               <Label htmlFor="recipient" className="text-gray-700">
-                Recipient Name
+                Hospital Recipient Name
               </Label>
               <Input
                 id="recipient"
@@ -445,158 +466,145 @@ export default function SupplyForm() {
 
           <div className="border-t border-gray-200 pt-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-gray-900">Supply Details</h3>
-              <Button
-                type="button"
-                variant="outline"
-                className="border-gray-300 text-gray-700 hover:bg-gray-100"
-                onClick={handleAddDetail}
-                disabled={!hasAvailableCylinders}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Cylinder
-              </Button>
+              <h3 className="text-lg font-medium text-gray-900">Cylinders Assigned to Vehicle</h3>
             </div>
 
-            {!hasAvailableCylinders && supplyDetails.length === 0 && (
+            {!vehiclePlate && (
               <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md flex items-center text-amber-700">
                 <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
-                <p className="text-sm">No filled cylinders are available for delivery. Please fill cylinders first.</p>
+                <p className="text-sm">Enter a vehicle plate number to see assigned cylinders.</p>
               </div>
             )}
 
-            {!hasAvailableCylinders && supplyDetails.length > 0 && (
-              <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md flex items-center text-amber-700">
-                <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
-                <p className="text-sm">All available filled cylinders have been selected.</p>
+            {isLoadingVehicleCylinders && vehiclePlate && (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full"></div>
               </div>
             )}
 
-            {supplyDetails.length === 0 ? (
+            {!isLoadingVehicleCylinders && vehiclePlate && vehicleCylinders.length === 0 && (
               <div className="text-center py-8 border border-dashed border-gray-300 rounded-lg bg-gray-50">
                 <div className="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-                  <Plus className="h-6 w-6 text-gray-400" />
+                  <Truck className="h-6 w-6 text-gray-400" />
                 </div>
-                <h4 className="text-sm font-medium text-gray-900 mb-1">No cylinders added</h4>
-                <p className="text-xs text-gray-500 mb-3">Add cylinders to this supply</p>
+                <h4 className="text-sm font-medium text-gray-900 mb-1">No cylinders assigned to this vehicle</h4>
+                <p className="text-xs text-gray-500 mb-3">
+                  Check the vehicle plate number or assign cylinders to this vehicle first
+                </p>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   className="border-gray-300 text-gray-700"
-                  onClick={handleAddDetail}
-                  disabled={!hasAvailableCylinders}
+                  onClick={() => router.push("/cylinders/assign")}
                 >
-                  Add First Cylinder
+                  Assign Cylinders
                 </Button>
               </div>
-            ) : (
+            )}
+
+            {!isLoadingVehicleCylinders && vehiclePlate && vehicleCylinders.length > 0 && (
               <div className="space-y-4">
-                {supplyDetails.map((detail, index) => (
-                  <div
-                    key={index}
-                    className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border border-gray-200 rounded-lg bg-gray-50 relative"
-                  >
-                    <div className="absolute -top-3 -left-3 bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium">
-                      {index + 1}
-                    </div>
+                <div className="bg-blue-50 border border-blue-100 rounded-md p-3 mb-4">
+                  <p className="text-sm text-blue-700">Select the cylinders that are being delivered in this supply.</p>
+                </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor={`cylinder-${index}`} className="text-gray-700">
-                        Cylinder
-                      </Label>
-                      <Select
-                        value={detail.cylinder_code}
-                        onValueChange={(value) => handleDetailChange(index, "cylinder_code", value)}
-                      >
-                        <SelectTrigger id={`cylinder-${index}`} className="border-gray-300 text-gray-900">
-                          <SelectValue placeholder="Select cylinder" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white border-gray-200">
-                          {getAvailableCylinders(index).map((cylinder) => (
-                            <SelectItem key={cylinder.id} value={cylinder.code} className="text-gray-900">
-                              {cylinder.code} ({cylinder.size})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor={`gas-type-${index}`} className="text-gray-700">
-                        Gas Type
-                      </Label>
-                      <Input
-                        id={`gas-type-${index}`}
-                        value={detail.gas_type_id ? gasTypes.find((g) => g.id === detail.gas_type_id)?.name || "" : ""}
-                        readOnly
-                        className="border-gray-300 bg-gray-100 text-gray-900"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor={`liters-${index}`} className="text-gray-700">
-                        Liters
-                      </Label>
-                      <Input
-                        id={`liters-${index}`}
-                        type="number"
-                        min="0"
-                        step="0.1"
-                        placeholder="0.0"
-                        value={detail.liters || ""}
-                        onChange={(e) => handleDetailChange(index, "liters", Number(e.target.value))}
-                        required
-                        className="border-gray-300 focus:border-blue-500 text-gray-900 placeholder:text-gray-400"
-                      />
-                    </div>
-
-                    <div className="space-y-2 flex items-end gap-2">
-                      <div className="flex-1">
-                        <Label htmlFor={`price-${index}`} className="text-gray-700">
-                          Price (RWF)
-                        </Label>
-                        <Input
-                          id={`price-${index}`}
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          placeholder="0.00"
-                          value={detail.price.toFixed(2)}
-                          readOnly
-                          className="border-gray-300 bg-gray-100 text-gray-900"
-                        />
-                      </div>
-
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className="h-10 w-10 border-gray-300 text-red-600 hover:bg-red-50 hover:text-red-700"
-                        onClick={() => handleRemoveDetail(index)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-
-                {hasAvailableCylinders && (
-                  <div className="flex justify-end">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="mt-2 border-gray-300 text-gray-700"
-                      onClick={handleAddDetail}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {vehicleCylinders.map((cylinder) => (
+                    <div
+                      key={cylinder.id}
+                      className={`border rounded-lg p-4 ${
+                        selectedCylinderIds.includes(cylinder.code)
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-200 bg-white"
+                      }`}
                     >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Another Cylinder
-                    </Button>
-                  </div>
-                )}
+                      <div className="flex items-start">
+                        <Checkbox
+                          id={`cylinder-${cylinder.id}`}
+                          checked={selectedCylinderIds.includes(cylinder.code)}
+                          onCheckedChange={() => handleToggleCylinder(cylinder.code)}
+                          className="mt-1"
+                        />
+                        <div className="ml-3">
+                          <Label
+                            htmlFor={`cylinder-${cylinder.id}`}
+                            className="text-sm font-medium text-gray-900 cursor-pointer"
+                          >
+                            {cylinder.code}
+                          </Label>
+                          <p className="text-xs text-gray-500">Size: {cylinder.size}</p>
+                          <p className="text-xs text-gray-500">Gas Type: {cylinder.gas_type || "Unknown"}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
+
+          {/* Invoice Section - Commented out as requested */}
+          {/* <div className="border-t border-gray-200 pt-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <FileText className="h-5 w-5 text-blue-600" />
+                <h3 className="text-lg font-medium text-gray-900">Invoice</h3>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch id="create-invoice" checked={createInvoice} onCheckedChange={setCreateInvoice} />
+                <Label htmlFor="create-invoice" className="text-sm font-medium text-gray-700">
+                  Create Invoice
+                </Label>
+              </div>
+            </div>
+
+            {createInvoice && (
+              <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="invoice-date" className="text-gray-700">
+                      Invoice Date
+                    </Label>
+                    <Input
+                      id="invoice-date"
+                      type="date"
+                      value={invoiceDate}
+                      onChange={(e) => setInvoiceDate(e.target.value)}
+                      className="border-gray-300 focus:border-blue-500 text-gray-900"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="invoice-status" className="text-gray-700">
+                      Payment Status
+                    </Label>
+                    <Select value={invoiceStatus} onValueChange={(value: "paid" | "unpaid") => setInvoiceStatus(value)}>
+                      <SelectTrigger id="invoice-status" className="border-gray-300 text-gray-900">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-gray-200">
+                        <SelectItem value="paid" className="text-gray-900">
+                          Paid
+                        </SelectItem>
+                        <SelectItem value="unpaid" className="text-gray-900">
+                          Unpaid
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-white border border-blue-100 rounded-md">
+                  <div className="flex items-center space-x-2">
+                    <FileText className="h-5 w-5 text-blue-600" />
+                    <span className="text-sm font-medium text-gray-700">
+                      Invoice will be created for the total amount
+                    </span>
+                  </div>
+                  <span className="text-lg font-bold text-blue-600">RWF{calculateTotalPrice().toFixed(2)}</span>
+                </div>
+              </div>
+            )}
+          </div> */}
 
           <div className="border-t border-gray-200 pt-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Deliverer Signature</h3>
@@ -689,7 +697,11 @@ export default function SupplyForm() {
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={isLoading} className="bg-blue-600 hover:bg-blue-700 text-white">
+          <Button
+            type="submit"
+            disabled={isLoading || selectedCylinderIds.length === 0}
+            className="bg-teal-600 hover:bg-teal-700 text-white"
+          >
             {isLoading ? (
               <span className="flex items-center gap-1">
                 <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
