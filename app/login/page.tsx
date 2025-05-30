@@ -250,14 +250,10 @@ export default function LoginPage() {
                     type="checkbox"
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
-                  <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                    Remember me
-                  </label>
+                  
                 </div>
                 <div className="text-sm">
-                  <a href="#" className="font-medium text-teal-500 hover:text-teal-700">
-                    Forgot password?
-                  </a>
+                  
                 </div>
               </div>
 

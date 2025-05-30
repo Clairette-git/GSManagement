@@ -16,11 +16,15 @@ const COLORS = {
 }
 
 export function CylinderStatusChart({ data }: CylinderStatusChartProps) {
+  console.log("🔍 Chart received data:", data)
+
   const chartData = data.map((item) => ({
     name: item.status.charAt(0).toUpperCase() + item.status.slice(1),
     value: item.count,
     color: COLORS[item.status as keyof typeof COLORS] || "#6b7280",
   }))
+
+  console.log("📊 Chart data:", chartData)
 
   return (
     <Card className="hover:shadow-lg transition-shadow duration-200 ease-in-out transform cursor-pointer">

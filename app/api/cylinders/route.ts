@@ -117,7 +117,17 @@ export async function GET(request: Request) {
     }
 
     // Otherwise, return all cylinders
-    const [cylinders] = (await db.query("SELECT * FROM cylinders ORDER BY code")) as QueryResult
+    const query = `
+      SELECT 
+        c.*, gt.name as gas_type
+      FROM 
+        cylinders c
+      LEFT JOIN 
+        gas_types gt ON c.gas_type_id = gt.id
+      ORDER BY 
+        c.code
+    `
+    const [cylinders] = (await db.query(query)) as QueryResult
 
     return NextResponse.json({
       data: cylinders,

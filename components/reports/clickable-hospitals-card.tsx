@@ -3,7 +3,6 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Building } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
 
 interface ClickableHospitalsCardProps {
   value: number
@@ -12,48 +11,34 @@ interface ClickableHospitalsCardProps {
 
 export function ClickableHospitalsCard({ value, period }: ClickableHospitalsCardProps) {
   const router = useRouter()
-  const [isHovered, setIsHovered] = useState(false)
 
   const handleClick = () => {
-    router.push("/dashboard/supplies")
-  }
-
-  const getPeriodDescription = () => {
-    switch (period) {
-      case "day":
-        return "Today"
-      case "week":
-        return "This week"
-      case "month":
-        return "This month"
-      case "year":
-        return "This year"
-      default:
-        return "Total"
-    }
+    router.push("/supplies")
   }
 
   return (
     <Card
-      className={`w-full cursor-pointer transition-all duration-200 ${
-        isHovered ? "bg-teal-700/20 border-2 border-teal-300 shadow-lg" : "border-2 border-transparent"
-      }`}
+      className="bg-teal-700 border-teal-600 cursor-pointer hover:bg-teal-700 transition-colors"
       onClick={handleClick}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
       <CardContent className="p-6">
-        <div className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <p className="text-sm font-medium text-teal-100">Hospitals Served</p>
-          <div className="text-purple-400">
-            <Building className="h-6 w-6" />
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-medium text-teal-100">Hospitals Served</h3>
+          <div className="p-2 rounded-md bg-purple-500/10 text-purple-500 border-purple-500/20">
+            <Building className="h-5 w-5" />
           </div>
         </div>
         <div className="text-2xl font-bold text-white">{value}</div>
-        <div className="flex items-center justify-between text-xs text-teal-100">
-          <span>{getPeriodDescription()}</span>
-          <span className="text-teal-300">Click to view supplies →</span>
-        </div>
+        <p className="text-xs text-teal-200 mt-1">
+          {period === "day"
+            ? "Today"
+            : period === "week"
+              ? "This week"
+              : period === "month"
+                ? "This month"
+                : "This year"}
+          {" - Click to view all hospitals"}
+        </p>
       </CardContent>
     </Card>
   )

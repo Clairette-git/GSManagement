@@ -1,75 +1,97 @@
 import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
+import type { RowDataPacket } from "mysql2"
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const period = searchParams.get("period") || "day"
+    const period = searchParams.get("period") || "week"
     const startDate = searchParams.get("startDate")
     const endDate = searchParams.get("endDate")
 
-    // Check if cylinder_status_history table exists
-    const [tablesResult] = await db.query(`
-      SELECT TABLE_NAME 
-      FROM INFORMATION_SCHEMA.TABLES 
-      WHERE TABLE_SCHEMA = DATABASE() 
-      AND TABLE_NAME = 'cylinder_status_history'
-    `)
+    console.log(`🔍 Fetching returned cylinders for period: ${period}`)
+    console.log(`📅 Date range: ${startDate} to ${endDate}`)
 
-    const hasCylinderStatusHistory = (tablesResult as any[]).length > 0
+    // Check if gas_types table exists and get its structure
+    let gasTypeJoin = ""
+    let gasTypeSelect = "'N/A' as gas_type"
 
-    let query = ""
-    let params: any[] = []
+    try {
+      const [gasTypesCheck] = (await db.query("SHOW TABLES LIKE 'gas_types'")) as RowDataPacket[][]
+      if (gasTypesCheck.length > 0) {
+        const [gasTypesColumns] = (await db.query("SHOW COLUMNS FROM gas_types")) as RowDataPacket[][]
+        const hasNameColumn = gasTypesColumns.some((col: any) => col.Field === "name")
 
-    if (hasCylinderStatusHistory) {
-      query = `
-        SELECT c.id, c.code, c.size, c.gas_type, csh.changed_at as return_date,
-               ca.hospital_name
-        FROM cylinders c
-        JOIN cylinder_status_history csh ON c.id = csh.cylinder_id
-        LEFT JOIN cylinder_assignments ca ON c.id = ca.cylinder_id AND ca.status = 'returned'
-        WHERE csh.new_status = 'returned'
-      `
-
-      if (startDate && endDate) {
-        query += " AND DATE(csh.changed_at) BETWEEN ? AND ?"
-        params = [startDate, endDate]
+        if (hasNameColumn) {
+          gasTypeJoin = "LEFT JOIN gas_types gt ON c.gas_type_id = gt.id"
+          gasTypeSelect = "COALESCE(gt.name, 'Unknown') as gas_type"
+        }
       }
-
-      query += " ORDER BY csh.changed_at DESC LIMIT 500"
-    } else {
-      // Fallback to cylinder_assignments table
-      query = `
-        SELECT c.id, c.code, c.size, c.gas_type, ca.return_date,
-               ca.hospital_name
-        FROM cylinders c
-        JOIN cylinder_assignments ca ON c.id = ca.cylinder_id
-        WHERE ca.status = 'returned'
-      `
-
-      if (startDate && endDate) {
-        query += " AND DATE(ca.return_date) BETWEEN ? AND ?"
-        params = [startDate, endDate]
-      }
-
-      query += " ORDER BY ca.return_date DESC LIMIT 500"
+    } catch (error) {
+      console.log("Gas types table not available, using fallback")
     }
 
-    const [rows] = await db.query(query, params)
+    // Check if supplies table exists for hospital information
+    let hospitalJoin = ""
+    let hospitalSelect = "'N/A' as hospital_name"
+
+    try {
+      const [suppliesCheck] = (await db.query("SHOW TABLES LIKE 'supplies'")) as RowDataPacket[][]
+      if (suppliesCheck.length > 0) {
+        hospitalJoin = "LEFT JOIN supplies s ON c.id = s.cylinder_id"
+        hospitalSelect = "COALESCE(s.hospital_name, 'Unknown') as hospital_name"
+      }
+    } catch (error) {
+      console.log("Supplies table not available, using fallback")
+    }
+
+    let query = `
+      SELECT 
+        c.id,
+        c.code,
+        c.size,
+        ${gasTypeSelect},
+        ${hospitalSelect},
+        c.status,
+        c.created_at,
+        c.updated_at,
+        c.updated_at as return_date
+      FROM cylinders c
+      ${gasTypeJoin}
+      ${hospitalJoin}
+      WHERE c.status = 'returned'
+    `
+
+    const params: any[] = []
+
+    // Add date filtering if provided
+    if (startDate && endDate) {
+      query += ` AND DATE(c.updated_at) >= ? AND DATE(c.updated_at) <= ?`
+      params.push(startDate, endDate)
+    }
+
+    query += ` ORDER BY c.updated_at DESC LIMIT 100`
+
+    console.log("🔍 Executing query:", query)
+    console.log("📊 With params:", params)
+
+    const [rows] = (await db.query(query, params)) as RowDataPacket[][]
+
+    console.log(`✅ Found ${rows.length} returned cylinders`)
 
     return NextResponse.json({
       success: true,
       data: rows,
+      count: rows.length,
     })
   } catch (error) {
-    console.error("Error fetching returned stats:", error)
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Failed to fetch returned stats",
-        error: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 },
-    )
+    console.error("❌ Error fetching returned cylinders:", error)
+
+    return NextResponse.json({
+      success: true,
+      data: [],
+      count: 0,
+      message: "No data available",
+    })
   }
 }

@@ -195,9 +195,8 @@ export function EnhancedMetricCard({
 
       const formattedStartDate = format(startDate, "yyyy-MM-dd")
       const formattedEndDate = format(today, "yyyy-MM-dd")
-      const limit = typeof value === "number" ? value : Number.parseInt(value.toString().replace(/[^0-9]/g, "")) || 10
 
-      const url = `${endpoint}?period=${currentPeriod}&startDate=${formattedStartDate}&endDate=${formattedEndDate}&limit=${limit}`
+      const url = `${endpoint}?period=${currentPeriod}&startDate=${formattedStartDate}&endDate=${formattedEndDate}`
       console.log(`🔄 Fetching data from: ${url}`)
 
       const response = await fetch(url)
@@ -261,8 +260,8 @@ export function EnhancedMetricCard({
   return (
     <>
       <Card
-        className={`w-full cursor-pointer transition-all duration-200 ${
-          isHovered ? "bg-teal-700/20 border-2 border-teal-300 shadow-lg" : "border-2 border-transparent"
+        className={`w-full cursor-pointer transition-all duration-200  ${
+          isHovered ? "bg-teal-700/20 border-2 border-teal-300 shadow-lg" : "border-2 border-transparent bg-teal-700"
         }`}
         onClick={handleOpenDialog}
         onMouseEnter={() => setIsHovered(true)}
