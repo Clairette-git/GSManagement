@@ -3,7 +3,7 @@ import ReportsOverview from "@/components/reports/reports-overview"
 
 export default function ReportsPage() {
   return (
-    <RoleAccessControl allowedRoles={["admin"]}>
+    <RoleAccessControl allowedRoles={["admin", "storekeeper"]}>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>

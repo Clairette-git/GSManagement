@@ -21,7 +21,7 @@ const navigation: NavItem[] = [
   { name: "Supplies", href: "/supplies", icon: Truck, roles: ["admin", "storekeeper"] },
   { name: "Supply Form", href: "/supplies/add", icon: ClipboardList, roles: ["technician"] },
   { name: "Invoices", href: "/invoices", icon: FileText, roles: ["admin", "storekeeper"] },
-  { name: "Reports", href: "/reports", icon: BarChart3, roles: ["admin"] },
+  { name: "Reports", href: "/reports", icon: BarChart3, roles: ["admin", "storekeeper"] },
   { name: "Users", href: "/users", icon: Users, roles: ["admin"] },
 
 ]
