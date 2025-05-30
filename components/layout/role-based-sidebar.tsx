@@ -70,7 +70,7 @@ const navItems: NavItem[] = [
     name: "Reports",
     href: "/reports",
     icon: BarChart3,
-    roles: ["admin"],
+    roles: ["admin", "storekeeper"],
   },
   {
     name: "User Management",

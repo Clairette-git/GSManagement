@@ -270,7 +270,7 @@ export default function CylindersTable() {
               </Link>
             )}
 
-            {filledCylindersCount > 0 && (
+            {filledCylindersCount > 0 && (user?.role === "admin" || user?.role === "storekeeper") && (
               <Link href="/cylinders/assign">
                 <Button className="bg-teal-600 hover:bg-teal-700 text-white h-10 px-4 rounded-lg flex items-center gap-2">
                   <Truck className="h-4 w-4" />

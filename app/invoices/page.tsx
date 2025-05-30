@@ -93,7 +93,7 @@ export default async function InvoicesPage() {
                         <TableCell className="font-medium">INV-{invoice.id.toString().padStart(4, "0")}</TableCell>
                         <TableCell>{formatDate(invoice.date)}</TableCell>
                         <TableCell>{invoice.hospital_name}</TableCell>
-                        <TableCell className="text-right font-medium">${Number(invoice.amount).toFixed(2)}</TableCell>
+                        <TableCell className="text-right font-medium">RWF{Number(invoice.amount).toFixed(2)}</TableCell>
                         <TableCell>
                           <Badge
                             variant="outline"

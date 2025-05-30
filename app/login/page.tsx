@@ -168,7 +168,7 @@ export default function LoginPage() {
           </h2>
         </div>
 
-        <div className="relative z-10 text-sm text-white">© 2025 Kalisimbi Gas. All rights reserved.</div>
+        <div className="relative z-10 text-sm text-white">© 2025 DPMMK. All rights reserved.</div>
       </div>
 
       {/* Right side - Login form */}
@@ -244,12 +244,7 @@ export default function LoginPage() {
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <input
-                    id="remember-me"
-                    name="remember-me"
-                    type="checkbox"
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
+                
                   
                 </div>
                 <div className="text-sm">
@@ -272,16 +267,7 @@ export default function LoginPage() {
                 )}
               </button>
 
-              <p className="mt-6 text-center text-sm text-gray-600">
-                Don't have an account?{" "}
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("signup")}
-                  className="font-medium text-teal-500 hover:text-teal-700"
-                >
-                  Sign up
-                </button>
-              </p>
+            
             </form>
           ) : (
             <form onSubmit={handleSignup} className="space-y-5">
