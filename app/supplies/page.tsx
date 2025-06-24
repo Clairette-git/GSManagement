@@ -20,10 +20,7 @@ export default function SuppliesPage() {
         </div>
         {(user?.role === "admin" || user?.role === "storekeeper") && (
           <Link href="/supplies/add">
-            <Button className="bg-teal-600 hover:bg-teal-700">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add Supply
-            </Button>
+           
           </Link>
         )}
       </div>

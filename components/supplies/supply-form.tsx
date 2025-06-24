@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import type { Cylinder, GasType } from "@/types"
-import { ArrowLeft, Save, RefreshCw, AlertCircle, Search, Truck } from "lucide-react"
+import { ArrowLeft, Save, RefreshCw, AlertCircle, Search, Truck, DollarSign } from "lucide-react"
 
 export default function SupplyForm() {
   const router = useRouter()
@@ -37,6 +37,8 @@ export default function SupplyForm() {
       gas_type_id: number
       liters: number
       price: number
+      price_per_liter?: number // Add custom price per liter
+      default_price_per_liter?: number // Store default price for reference
     }>
   >([])
 
@@ -109,8 +111,14 @@ export default function SupplyForm() {
         const cylinderSize = cylinders.find((c) => c.code === cylinderCode)?.size || ""
         const sizeNumber = Number.parseInt(cylinderSize.replace(/[^0-9]/g, "")) || 0
 
-        // Calculate price based on gas type and liters
-        const pricePerLiter = gasType ? Number(gasType.price_per_liter) : 0
+        // Get default price per liter from gas type
+        const defaultPricePerLiter = gasType ? Number(gasType.price_per_liter) : 0
+
+        // Check if this cylinder already has custom pricing
+        const existingDetail = supplyDetails.find((detail) => detail.cylinder_code === cylinderCode)
+        const pricePerLiter = existingDetail?.price_per_liter || defaultPricePerLiter
+
+        // Calculate total price
         const price = pricePerLiter * sizeNumber
 
         return {
@@ -118,6 +126,8 @@ export default function SupplyForm() {
           gas_type_id: gasTypeId,
           liters: sizeNumber,
           price: price,
+          price_per_liter: pricePerLiter,
+          default_price_per_liter: defaultPricePerLiter,
         }
       })
 
@@ -146,6 +156,40 @@ export default function SupplyForm() {
   const handleToggleCylinder = (cylinderCode: string) => {
     setSelectedCylinderIds((prev) =>
       prev.includes(cylinderCode) ? prev.filter((code) => code !== cylinderCode) : [...prev, cylinderCode],
+    )
+  }
+
+  // New function to handle price per liter changes
+  const handlePricePerLiterChange = (cylinderCode: string, newPricePerLiter: number) => {
+    setSupplyDetails((prev) =>
+      prev.map((detail) => {
+        if (detail.cylinder_code === cylinderCode) {
+          const newPrice = newPricePerLiter * detail.liters
+          return {
+            ...detail,
+            price_per_liter: newPricePerLiter,
+            price: newPrice,
+          }
+        }
+        return detail
+      }),
+    )
+  }
+
+  // Function to reset to default price
+  const resetToDefaultPrice = (cylinderCode: string) => {
+    setSupplyDetails((prev) =>
+      prev.map((detail) => {
+        if (detail.cylinder_code === cylinderCode) {
+          const defaultPrice = (detail.default_price_per_liter || 0) * detail.liters
+          return {
+            ...detail,
+            price_per_liter: detail.default_price_per_liter || 0,
+            price: defaultPrice,
+          }
+        }
+        return detail
+      }),
     )
   }
 
@@ -273,6 +317,14 @@ export default function SupplyForm() {
     try {
       const totalPrice = calculateTotalPrice()
 
+      // Prepare supply details with the actual prices used
+      const finalSupplyDetails = supplyDetails.map((detail) => ({
+        cylinder_code: detail.cylinder_code,
+        gas_type_id: detail.gas_type_id,
+        liters: detail.liters,
+        price: detail.price, // This will be the final calculated price (custom or default)
+      }))
+
       const response = await fetch("/api/supplies", {
         method: "POST",
         headers: {
@@ -290,7 +342,7 @@ export default function SupplyForm() {
           deliverer_signature: delivererSignatureDataURL,
           total_price: totalPrice,
           kilometers: kilometers,
-          supply_details: supplyDetails,
+          supply_details: finalSupplyDetails,
           create_invoice: createInvoice,
           invoice_status: invoiceStatus,
           invoice_date: invoiceDate || date,
@@ -509,7 +561,7 @@ export default function SupplyForm() {
                   <p className="text-sm text-blue-700">Select the cylinders that are being delivered in this supply.</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   {vehicleCylinders.map((cylinder) => (
                     <div
                       key={cylinder.id}
@@ -519,22 +571,89 @@ export default function SupplyForm() {
                           : "border-gray-200 bg-white"
                       }`}
                     >
-                      <div className="flex items-start">
+                      <div className="flex items-start space-x-4">
                         <Checkbox
                           id={`cylinder-${cylinder.id}`}
                           checked={selectedCylinderIds.includes(cylinder.code)}
                           onCheckedChange={() => handleToggleCylinder(cylinder.code)}
                           className="mt-1"
                         />
-                        <div className="ml-3">
-                          <Label
-                            htmlFor={`cylinder-${cylinder.id}`}
-                            className="text-sm font-medium text-gray-900 cursor-pointer"
-                          >
-                            {cylinder.code}
-                          </Label>
-                          <p className="text-xs text-gray-500">Size: {cylinder.size}</p>
-                          <p className="text-xs text-gray-500">Gas Type: {cylinder.gas_type || "Unknown"}</p>
+                        <div className="flex-1">
+                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+                            <div>
+                              <Label
+                                htmlFor={`cylinder-${cylinder.id}`}
+                                className="text-sm font-medium text-gray-900 cursor-pointer"
+                              >
+                                {cylinder.code}
+                              </Label>
+                              <p className="text-xs text-gray-500">Size: {cylinder.size}</p>
+                              <p className="text-xs text-gray-500">Gas Type: {cylinder.gas_type || "Unknown"}</p>
+                            </div>
+
+                            {selectedCylinderIds.includes(cylinder.code) && (
+                              <>
+                                <div className="space-y-2">
+                                  <Label className="text-xs text-gray-600">Default Price/L</Label>
+                                  <div className="text-sm font-medium text-gray-700">
+                                    RWF{" "}
+                                    {supplyDetails
+                                      .find((d) => d.cylinder_code === cylinder.code)
+                                      ?.default_price_per_liter?.toFixed(2) || "0.00"}
+                                  </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label className="text-xs text-gray-600">Custom Price/L</Label>
+                                  <div className="flex items-center space-x-2">
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      step="0.01"
+                                      value={
+                                        supplyDetails.find((d) => d.cylinder_code === cylinder.code)?.price_per_liter ||
+                                        0
+                                      }
+                                      onChange={(e) => handlePricePerLiterChange(cylinder.code, Number(e.target.value))}
+                                      className="w-24 h-8 text-sm"
+                                      placeholder="0.00"
+                                    />
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 px-2 text-xs"
+                                      onClick={() => resetToDefaultPrice(cylinder.code)}
+                                      title="Reset to default price"
+                                    >
+                                      <RefreshCw className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label className="text-xs text-gray-600">Total Price</Label>
+                                  <div className="flex items-center space-x-2">
+                                    
+                                    <span className="text-sm font-bold text-green-600">
+                                      RWF{" "}
+                                      {supplyDetails
+                                        .find((d) => d.cylinder_code === cylinder.code)
+                                        ?.price?.toFixed(2) || "0.00"}
+                                    </span>
+                                  </div>
+                                  {supplyDetails.find((d) => d.cylinder_code === cylinder.code)?.price_per_liter !==
+                                    supplyDetails.find((d) => d.cylinder_code === cylinder.code)
+                                      ?.default_price_per_liter && (
+                                    <div className="text-xs text-amber-600 flex items-center">
+                                      <AlertCircle className="h-3 w-3 mr-1" />
+                                      Custom pricing
+                                    </div>
+                                  )}
+                                </div>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -543,68 +662,6 @@ export default function SupplyForm() {
               </div>
             )}
           </div>
-
-          {/* Invoice Section - Commented out as requested */}
-          {/* <div className="border-t border-gray-200 pt-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-2">
-                <FileText className="h-5 w-5 text-blue-600" />
-                <h3 className="text-lg font-medium text-gray-900">Invoice</h3>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Switch id="create-invoice" checked={createInvoice} onCheckedChange={setCreateInvoice} />
-                <Label htmlFor="create-invoice" className="text-sm font-medium text-gray-700">
-                  Create Invoice
-                </Label>
-              </div>
-            </div>
-
-            {createInvoice && (
-              <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="invoice-date" className="text-gray-700">
-                      Invoice Date
-                    </Label>
-                    <Input
-                      id="invoice-date"
-                      type="date"
-                      value={invoiceDate}
-                      onChange={(e) => setInvoiceDate(e.target.value)}
-                      className="border-gray-300 focus:border-blue-500 text-gray-900"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="invoice-status" className="text-gray-700">
-                      Payment Status
-                    </Label>
-                    <Select value={invoiceStatus} onValueChange={(value: "paid" | "unpaid") => setInvoiceStatus(value)}>
-                      <SelectTrigger id="invoice-status" className="border-gray-300 text-gray-900">
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white border-gray-200">
-                        <SelectItem value="paid" className="text-gray-900">
-                          Paid
-                        </SelectItem>
-                        <SelectItem value="unpaid" className="text-gray-900">
-                          Unpaid
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-white border border-blue-100 rounded-md">
-                  <div className="flex items-center space-x-2">
-                    <FileText className="h-5 w-5 text-blue-600" />
-                    <span className="text-sm font-medium text-gray-700">
-                      Invoice will be created for the total amount
-                    </span>
-                  </div>
-                  <span className="text-lg font-bold text-blue-600">RWF{calculateTotalPrice().toFixed(2)}</span>
-                </div>
-              </div>
-            )}
-          </div> */}
 
           <div className="border-t border-gray-200 pt-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Deliverer Signature</h3>
@@ -681,9 +738,17 @@ export default function SupplyForm() {
           </div>
 
           <div className="border-t border-gray-200 pt-6">
-            <div className="flex justify-between items-center">
-              <span className="text-lg font-medium text-gray-900">Total Price:</span>
-              <span className="text-xl font-bold text-blue-600">RWF{calculateTotalPrice().toFixed(2)}</span>
+            <div className="bg-gray-50 rounded-lg p-4">
+              <div className="flex justify-between items-center">
+                <span className="text-lg font-medium text-gray-900">Total Price:</span>
+                <span className="text-2xl font-bold text-blue-600">RWF {calculateTotalPrice().toFixed(2)}</span>
+              </div>
+              {supplyDetails.some((detail) => detail.price_per_liter !== detail.default_price_per_liter) && (
+                <div className="mt-2 text-sm text-amber-600 flex items-center">
+                  <AlertCircle className="h-4 w-4 mr-1" />
+                  Custom pricing applied to some cylinders
+                </div>
+              )}
             </div>
           </div>
         </CardContent>
@@ -700,7 +765,7 @@ export default function SupplyForm() {
           <Button
             type="submit"
             disabled={isLoading || selectedCylinderIds.length === 0}
-            className="bg-teal-600 hover:bg-teal-700 text-white"
+            className="bg-blue-600 hover:bg-blue-700 text-white"
           >
             {isLoading ? (
               <span className="flex items-center gap-1">
