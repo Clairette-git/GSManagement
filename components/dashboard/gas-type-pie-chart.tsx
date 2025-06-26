@@ -50,8 +50,8 @@ export function GasTypeChart({ className }: GasTypeChartProps) {
       return (
         <div className="bg-teal-800 p-2 rounded border border-teal-600 text-white">
           <p className="font-medium">{payload[0].name}</p>
-          <p className="text-teal-200">${payload[0].value.toFixed(2)} per liter</p>
-          <p className="text-teal-200">{(payload[0].percent * 100).toFixed(0)}% of total</p>
+          <p className="text-teal-200">RWF{payload[0].value.toFixed(2)} per liter</p>
+         
         </div>
       )
     }

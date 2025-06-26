@@ -52,10 +52,13 @@ export default function InventoryTable() {
       if (response.ok) {
         setGasTypes(gasTypes.filter((gasType) => gasType.id !== id))
       } else {
-        console.error("Failed to delete gas type")
+        const errorData = await response.json()
+        console.error("Failed to delete gas type:", errorData.message)
+        alert(`Failed to delete gas type: ${errorData.message}`)
       }
     } catch (error) {
       console.error("Error deleting gas type:", error)
+      alert("An error occurred while deleting the gas type")
     }
   }
 
@@ -157,15 +160,81 @@ export default function InventoryTable() {
                   </TableCell>
                   <TableCell className="py-4 px-6 text-right">
                     <div className="flex justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 px-3 text-gray-700 border-gray-300 hover:bg-gray-100"
-                        onClick={() => router.push(`/inventory/edit-gas-type/${gasType.id}`)}
-                      >
-                        <Edit className="h-3.5 w-3.5 mr-1" />
-                        Edit
-                      </Button>
+  <AlertDialog>
+  <AlertDialogTrigger asChild>
+    <Button
+      variant="outline"
+      size="sm"
+      className="h-8 px-3 text-gray-700 border-gray-300 hover:bg-gray-100"
+    >
+      <Edit className="h-3.5 w-3.5 mr-1" />
+      Edit
+    </Button>
+  </AlertDialogTrigger>
+  <AlertDialogContent className="bg-white text-gray-700">
+    <AlertDialogHeader>
+      <AlertDialogTitle>Edit Gas Type</AlertDialogTitle>
+      <AlertDialogDescription>
+        Make changes to the gas type and click save.
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+
+    {/* Editable Form */}
+    <div className="space-y-4 mt-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Name</label>
+        <Input
+          defaultValue={gasType.name}
+          onChange={(e) => gasType.name = e.target.value}
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Price per Liter</label>
+        <Input
+          type="number"
+          defaultValue={gasType.price_per_liter}
+          onChange={(e) => gasType.price_per_liter = parseFloat(e.target.value)}
+        />
+      </div>
+    </div>
+
+    <AlertDialogFooter className="mt-4">
+      <AlertDialogCancel className="border border-gray-300 text-gray-700">
+        Cancel
+      </AlertDialogCancel>
+      <Button
+        className="bg-blue-600 text-white hover:bg-blue-700"
+        onClick={async () => {
+          try {
+            const res = await fetch(`/api/gas-types/${gasType.id}`, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                name: gasType.name,
+                price_per_liter: gasType.price_per_liter,
+              }),
+            })
+
+            if (!res.ok) {
+              const error = await res.json()
+              alert("Failed to update: " + error.message)
+            } else {
+              alert("Updated successfully!")
+              window.location.reload()
+            }
+          } catch (err) {
+            console.error("Edit error:", err)
+            alert("Error updating gas type.")
+          }
+        }}
+      >
+        Save
+      </Button>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button
@@ -177,10 +246,10 @@ export default function InventoryTable() {
                             Delete
                           </Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent className="bg-white">
+                        <AlertDialogContent className="bg-white text-gray-700">
                           <AlertDialogHeader>
                             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
+                            <AlertDialogDescription className="text-gray-700">
                               This will permanently delete the gas type. This action cannot be undone.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
@@ -208,16 +277,9 @@ export default function InventoryTable() {
 
       <div className="p-4 border-t border-gray-200 bg-gray-50 flex items-center justify-between">
         <div className="text-sm text-gray-500">Showing {filteredGasTypes.length} gas types</div>
-        {/* <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="h-8 px-3 text-gray-700 border-gray-300">
-            <Download className="h-3.5 w-3.5 mr-1" />
-            Export
-          </Button>
-          <Button variant="outline" size="sm" className="h-8 px-3 text-gray-700 border-gray-300">
-            <Upload className="h-3.5 w-3.5 mr-1" />
-            Import
-          </Button>
-        </div> */}
+        <div className="flex items-center gap-2">
+          
+        </div>
       </div>
     </div>
   )
