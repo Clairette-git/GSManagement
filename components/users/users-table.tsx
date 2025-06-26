@@ -197,7 +197,7 @@ export default function UsersTable() {
           ) : (
             users.map((user, index) => (
               <TableRow key={`user-${user.id}-${index}`}>
-                <TableCell className="font-medium">{user.id}</TableCell>
+               
                 <TableCell>
                   {editingUser === user.id ? (
                     <Input

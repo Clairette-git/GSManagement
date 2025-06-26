@@ -43,7 +43,7 @@ export default function UsersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">User Management</h2>
-          <p className="text-gray-600 mt-1">Manage system users and their roles</p>
+          <p className="text-teal-300 mt-1">Manage system users and their roles</p>
         </div>
         <AddUserDialog onUserAdded={handleUserAdded} />
       </div>

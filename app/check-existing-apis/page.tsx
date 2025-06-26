@@ -8,7 +8,7 @@ export default function CheckExistingAPIs() {
 
   const testExistingAPI = async () => {
     try {
-      // Test an API we know exists from your codebase
+     
       const response = await fetch("/api/test-connection")
       const data = await response.json()
       setResults((prev) => [...prev, `✅ /api/test-connection: ${response.status} - ${JSON.stringify(data)}`])
@@ -17,7 +17,7 @@ export default function CheckExistingAPIs() {
     }
 
     try {
-      // Test another existing API
+
       const response = await fetch("/api/cylinders")
       const data = await response.json()
       setResults((prev) => [
